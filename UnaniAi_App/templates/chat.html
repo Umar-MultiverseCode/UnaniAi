@@ -1,0 +1,138 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnaniAI Chat Interface</title>
+    <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <aside class="chat-sidebar glass">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="neon-text">Unani</span>AI
+                </div>
+                <button class="new-chat-btn glass">
+                    <span>New Chat</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+
+            <div class="chat-history">
+                <div class="history-section">
+                    <h3>Today</h3>
+                    <div class="history-item glass active">
+                        <span class="history-icon">🌿</span>
+                        <span>Herbal Remedies for Anxiety</span>
+                    </div>
+                    <div class="history-item glass">
+                        <span class="history-icon">🍵</span>
+                        <span>Natural Sleep Solutions</span>
+                    </div>
+                </div>
+                
+                <div class="history-section">
+                    <h3>Yesterday</h3>
+                    <div class="history-item glass">
+                        <span class="history-icon">🌡️</span>
+                        <span>Fever Treatment</span>
+                    </div>
+                    <div class="history-item glass">
+                        <span class="history-icon">🍃</span>
+                        <span>Digestive Health Tips</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer glass">
+                <div class="user-profile">
+                    <div class="user-avatar">JD</div>
+                    <span>John Doe</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="chat-main">
+            <div class="chat-header glass">
+                <div class="model-selector">
+                    <span class="model-name">UnaniAI Assistant</span>
+                    <span class="model-version">3.5</span>
+                </div>
+            </div>
+
+            <div class="chat-messages">
+                <!-- AI Message -->
+                <div class="message ai-message">
+                    <div class="message-avatar">
+                        <div class="avatar-circle">
+                            <div class="avatar-inner"></div>
+                        </div>
+                    </div>
+                    <div class="message-content glass">
+                        <div class="message-header">
+                            <span class="sender">UnaniAI</span>
+                        </div>
+                        <p>Welcome to UnaniAI! I'm your personal Unani medicine assistant. How can I help you today with natural healing solutions?</p>
+                    </div>
+                </div>
+
+                <!-- User Message -->
+                <div class="message user-message">
+                    <div class="message-avatar">U</div>
+                    <div class="message-content glass">
+                        <div class="message-header">
+                            <span class="sender">You</span>
+                        </div>
+                        <p>Can you suggest some natural remedies for anxiety?</p>
+                    </div>
+                </div>
+
+                <!-- AI Message with List -->
+                <div class="message ai-message">
+                    <div class="message-avatar">
+                        <div class="avatar-circle">
+                            <div class="avatar-inner"></div>
+                        </div>
+                    </div>
+                    <div class="message-content glass">
+                        <div class="message-header">
+                            <span class="sender">UnaniAI</span>
+                        </div>
+                        <p>Based on Unani medicine principles, here are some natural remedies for anxiety:</p>
+                        <ul>
+                            <li>Chamomile tea (Babunaj) - Known for its calming properties</li>
+                            <li>Lavender (Ustukhuddus) - Helps reduce stress and promote relaxation</li>
+                            <li>Valerian root (Balchar) - Natural sleep aid and anxiety reducer</li>
+                            <li>Rose (Gulab) - Mood enhancer and nervous system tonic</li>
+                        </ul>
+                        <p>Would you like more detailed information about any of these remedies?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container glass">
+                <form class="chat-form">
+                    <textarea 
+                        class="chat-input" 
+                        placeholder="Message UnaniAI..."
+                        rows="1"
+                    ></textarea>
+                    <button type="submit" class="send-button">
+                        <span>Send</span>
+                        <div class="button-glow"></div>
+                    </button>
+                </form>
+                <div class="input-footer">
+                    <p>UnaniAI can make mistakes. Consider checking important information.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
