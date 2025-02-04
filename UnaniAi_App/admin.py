@@ -1,3 +1,7 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import UserChat
+
+@admin.register(UserChat)
+class UserChatAdmin(admin.ModelAdmin):
+    list_display = ('user_message', 'bot_response', 'timestamp')

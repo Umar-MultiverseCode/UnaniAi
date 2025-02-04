@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'UnaniAi',
+    'UnaniAi_App',
 ]
 
 MIDDLEWARE = [
@@ -75,11 +77,18 @@ WSGI_APPLICATION = 'UnaniAi.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
+    
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'unani_ai_db',  # Database ka naam
+        'USER': 'unani_user',  # PostgreSQL username
+        'PASSWORD': 'Jahir@1402',  # Yahan naya password likhein
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
 
 
 # Password validation

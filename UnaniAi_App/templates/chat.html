@@ -8,6 +8,22 @@
     <title>UnaniAI Chat Interface</title>
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Add some basic styles for the history button */
+        .user-profile {
+            cursor: pointer;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            background-color: #ccc;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
@@ -49,11 +65,10 @@
                 </div>
             </div>
 
-            <div class="sidebar-footer glass">
-                <div class="user-profile">
-                    <div class="user-avatar">JD</div>
-                    <span>John Doe</span>
-                </div>
+            <!-- History Button -->
+            <div class="user-profile" id="historyBtn">
+                <span class="user-avatar"></span>
+                <span>History</span>
             </div>
         </aside>
 
@@ -118,12 +133,14 @@
 
             <div class="chat-input-container glass">
                 <form class="chat-form">
+                    {% csrf_token %}
                     <textarea 
                         class="chat-input" 
+                        id="user-input"
                         placeholder="Message UnaniAI..."
                         rows="1"
                     ></textarea>
-                    <button type="submit" class="send-button">
+                    <button type="submit" class="send-button" id="send-btn">
                         <span>Send</span>
                         <div class="button-glow"></div>
                     </button>
@@ -133,6 +150,152 @@
                 </div>
             </div>
         </main>
+
+        <!-- History Window -->
+        <div class="history-window glass" id="historyWindow" style="display: none;">
+            <div class="history-window-header">
+                <h3>Chat History</h3>
+                <button id="closeHistoryBtn">×</button>
+            </div>
+            <div class="history-window-content">
+                <!-- History items will be dynamically added here -->
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Function to toggle the history window
+        function toggleHistoryWindow() {
+            const historyWindow = document.getElementById('historyWindow');
+            console.log("Toggling history window"); // Debugging line
+            historyWindow.style.display = (historyWindow.style.display === 'none' || historyWindow.style.display === '') ? 'block' : 'none';
+        }
+
+        // Add event listener to the History button
+        document.getElementById('historyBtn').addEventListener('click', function() {
+            console.log("History button clicked"); // Debugging line
+            toggleHistoryWindow();
+        });
+
+        // Add event listener to the Close button in the history window
+        document.getElementById('closeHistoryBtn').addEventListener('click', function() {
+            console.log("Close button clicked"); // Debugging line
+            toggleHistoryWindow();
+        });
+
+        // Function to handle sending the user message (text or speech)
+        function sendMessage(userMessage) {
+            if (!userMessage) return; // If the input is empty, do nothing
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if (!csrfToken) {
+                console.error("CSRF token missing.");
+                return;
+            }
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('message', userMessage);
+
+            // Fetch to send the user message to backend
+            fetch('/get_response/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken  // Include CSRF token in headers
+                },
+                body: formData  // Send form data
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display response on the frontend
+                const botResponse = data.response;
+
+                // Create a new div for the user's message
+                const messagesContainer = document.querySelector('.chat-messages');
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.classList.add('message', 'user-message');
+                userMessageDiv.innerHTML = `
+                    <div class="message-avatar">U</div>
+                    <div class="message-content glass">
+                        <div class="message-header">
+                            <span class="sender">You</span>
+                        </div>
+                        <p>${userMessage}</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(userMessageDiv);
+
+                // Create a new div for the bot's response
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.classList.add('message', 'ai-message');
+                botMessageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <div class="avatar-circle">
+                            <div class="avatar-inner"></div>
+                        </div>
+                    </div>
+                    <div class="message-content glass">
+                        <div class="message-header">
+                            <span class="sender">UnaniAI</span>
+                        </div>
+                        <p>${botResponse}</p>
+                    </div>
+                `;
+                messagesContainer.appendChild(botMessageDiv);
+
+                // Speech Response (optional, if supported by the browser)
+                if ('speechSynthesis' in window) {
+                    const speech = new SpeechSynthesisUtterance(botResponse);
+                    speechSynthesis.speak(speech);
+                }
+
+                // Clear the input field
+                document.getElementById('user-input').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Send message when the "Send" button is clicked (text input)
+        document.getElementById('send-btn').addEventListener('click', function(e) {
+            e.preventDefault();  // Prevent default form submission
+            const userMessage = document.getElementById('user-input').value.trim();
+            sendMessage(userMessage);
+        });
+
+        // Send message when "Enter" key is pressed (text input)
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();  // Prevent the default "Enter" action
+                const userMessage = document.getElementById('user-input').value.trim();
+                sendMessage(userMessage);  // Send the message
+            }
+        });
+
+        // Function for speech input (start speech recognition)
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+
+        // Handle speech input when the microphone button is clicked
+        document.getElementById('microphone-btn').addEventListener('click', function() {
+            recognition.start();  // Start listening for speech
+        });
+
+        // Handle the speech input result
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('user-input').value = transcript;  // Update text input with the recognized speech
+            sendMessage(transcript);  // Send the speech input as text
+        };
+
+        // Handle errors during speech recognition
+        recognition.onerror = function(event) {
+            console.error("Speech recognition error:", event.error);
+        };
+    </script>
 </body>
 </html>
