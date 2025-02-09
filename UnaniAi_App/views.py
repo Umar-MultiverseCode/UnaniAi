@@ -1,171 +1,158 @@
-import pyttsx3  # Import pyttsx3 for text-to-speech
+import pyttsx3  # Text-to-Speech (TTS)
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import UserChat  # Import the UserChat model
-import threading  # For running speech and text concurrently
-import joblib  # ML model ke liye
-import numpy as np  # ML prediction ke liye
+from .models import UserChat  # Database Model
+import threading  # Parallel speech
+import joblib  # ML Model
+import numpy as np  # ML Predictions
+import requests  # Ollama API Calls
+import json
+from django.db import DatabaseError  # DB Handling
 
-# ✅ Load trained ML model
-model = joblib.load("UnaniAi_App/trained_model.pkl")
+#  Load Trained ML Model
+try:
+    model = joblib.load("UnaniAi_App/trained_model.pkl")
+    print(" ML Model Loaded Successfully!")
+except FileNotFoundError:
+    print(" Error: ML Model file not found!")
+    model = None
+except Exception as e:
+    print(f" Unexpected Error loading ML model: {e}")
+    model = None
 
-# ✅ Disease encoding mapping (ML model ke liye)
-disease_mapping = {'cough': 0, 'malaria': 1, 'constipation': 2}
-medicine_mapping = {0: 'Marzanjosh', 1: 'Sanna Makki'}
+#  Disease Encoding Mapping (ML Model ke liye)
+disease_mapping = {'cough': 0, 'malaria': 1, 'constipation': 2, 'fever': 3, 'cold': 4}
+medicine_mapping = {0: 'Marzanjosh', 1: 'Sanna Makki', 3: 'Dawa-ul-Misk', 4: 'Qust al-Hindi'}
 
-# ✅ Disease-medication mapping
-diseases_medications = {
-    "cough": ("Marzanjosh", "https://aetmaad.co.in/product/al-marzanjosh", 300),
-    "malaria": ("Sanna Makki", "https://aetmaad.co.in/product/sanna-makki", 70),
-    "constipation": ("Sanna Makki", "https://aetmaad.co.in/product/sanna-makki", 70),
-}
+#  Ollama API Function with Proper Error Handling
+def get_llama2_response(prompt):
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "healthbot", "prompt": prompt, "stream": False},
+            timeout=15  # Timeout increased to handle slow response
+        )
 
-# ✅ Base questions for each illness (Yahi miss ho gaya tha 🤦‍♂️)
-base_questions = {
-    "cough": [
-        "How long have you been experiencing this issue?",
-        "Are you currently taking any medication? (Yes/No)",
-        "If yes, which medication are you taking?",
-        "Do you have any allergies? (Yes/No)",
-        "If yes, what are you allergic to?",
-    ],
-    "malaria": [
-        "How long have you been experiencing this issue?",
-        "Are you currently taking any medication? (Yes/No)",
-        "If yes, which medication are you taking?",
-        "Do you have any allergies? (Yes/No)",
-        "If yes, what are you allergic to?",
-    ],
-    "constipation": [
-        "How long have you been experiencing this issue?",
-        "Are you currently taking any medication? (Yes/No)",
-        "If yes, which medication are you taking?",
-        "Do you have any allergies? (Yes/No)",
-        "If yes, what are you allergic to?",
-    ],
-}
+        if response.status_code != 200:
+            return " AI server is not responding. Try again later."
 
-# ✅ ML Prediction Function
-def predict_medicine(disease, dosage):
+        json_response = response.json()
+        return json_response.get("response", "No valid response received.")
+
+    except requests.exceptions.RequestException as e:
+        print(f" Ollama API error: {e}")
+        return "Sorry, I'm unable to connect to the AI server."
+
+#  ML Prediction Function (Dosage Auto-Adjust)
+def predict_medicine(disease, severity):
+    if not model:
+        return "ML model not available", 0
+
     if disease not in disease_mapping:
-        return "Unknown Disease"
+        return "Unknown Disease", 0
 
     disease_code = disease_mapping[disease]
+    dosage = 50 if severity == "mild" else 100
     input_data = np.array([[disease_code, dosage]])
-    predicted_code = model.predict(input_data)[0]
-    
-    return medicine_mapping.get(predicted_code, "Unknown Medicine")
 
-# Function to make bot speak while generating response in background
+    try:
+        predicted_code = model.predict(input_data)[0]
+        return medicine_mapping.get(predicted_code, "Unknown Medicine"), dosage
+    except Exception as e:
+        print(f" ML Prediction Error: {e}")
+        return "Prediction Error", 0
+
+#  Speech Function (Thread-Safe)
 def speak_response(response_text):
     def speak():
-        engine = pyttsx3.init()  # Initialize the TTS engine
-        voices = engine.getProperty('voices')  # Get available voices
-        engine.setProperty('voice', voices[0].id)  # Set male voice (usually index 0 for male)
-        engine.say(response_text)  # Pass the response to the engine
-        engine.runAndWait()  # Play the speech
+        try:
+            engine = pyttsx3.init()
+            engine.setProperty('rate', 150)
+            engine.setProperty('volume', 1.0)
+            voices = engine.getProperty('voices')
+            engine.setProperty('voice', voices[0].id)
+            engine.say(response_text)
+            engine.runAndWait()
+        except Exception as e:
+            print(f" Speech Synthesis Error: {e}")
     
-    # Run the speaking function in a separate thread
-    threading.Thread(target=speak).start()
+    threading.Thread(target=speak, daemon=True).start()
 
-# Chat Views
+#  Django Views
 def index(request):
     return render(request, 'index.html')
 
 def chat_view(request):
     return render(request, 'chat.html')
 
-# Get response based on user input
+#  Chatbot Response Function (Fixed JSON Handling + ML + Llama2)
 def get_response(request):
-    if request.method == 'POST':
-        # Get user message safely
-        user_message = request.POST.get('message', '').strip()
-        
-        if not user_message:
-            return JsonResponse({'response': "Please provide a message."})
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-        # Greeting logic
-        if "hi" in user_message.lower() or "hello" in user_message.lower():
-            bot_response = "Hello! How can I assist you today?"
-            speak_response(bot_response)  # Speak the response and return the text
+    #  Handle JSON & Form Data Properly
+    user_message = ""
+    if request.content_type == 'application/json':
+        try:
+            data = json.loads(request.body.decode('utf-8'))  # JSON Payload Handle
+            user_message = data.get('message', '').strip()
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    else:
+        user_message = request.POST.get('message', '').strip()  # Form Data Handle
+
+    if not user_message:
+        return JsonResponse({'response': "Please provide a message."})
+
+    #  Greeting Logic
+    if "hi" in user_message.lower() or "hello" in user_message.lower():
+        bot_response = "Hello! How can I assist you today?"
+        speak_response(bot_response)
+        try:
             UserChat.objects.create(user_message=user_message, bot_response=bot_response)
-            return JsonResponse({'response': bot_response})
+        except DatabaseError as e:
+            print(f" Database Error: {e}")
+        return JsonResponse({'response': bot_response})
 
-        # Illness detection logic
-        detected_illness = next((illness for illness in base_questions.keys() if illness in user_message.lower()), None)
+    #  Illness Detection with Severity
+    detected_illness = next((illness for illness in disease_mapping.keys() if illness in user_message.lower()), None)
+    severity = "mild" if "mild" in user_message.lower() else "severe"
 
-        # If illness detected, start asking questions
-        if detected_illness:
-            request.session['current_illness'] = detected_illness
-            request.session['current_question_index'] = 0
-            request.session['user_responses'] = {}
+    if detected_illness:
+        predicted_medicine, dosage = predict_medicine(detected_illness, severity)
+        llm_prompt = (
+            f"You are a medical AI assistant. Suggest a Unani medicine for {detected_illness} "
+            f"with dosage {dosage} mg based on ancient Unani practices."
+        )
+        llm_response = get_llama2_response(llm_prompt)
 
-            bot_response = base_questions[detected_illness][0]
-            speak_response(bot_response)  # Speak the response and return the text
+        bot_response = f"Based on ML model, try {predicted_medicine} ({dosage} mg). Llama 2 suggests: {llm_response}"
+        speak_response(bot_response)
+        try:
             UserChat.objects.create(user_message=user_message, bot_response=bot_response)
-            return JsonResponse({'response': bot_response})
+        except DatabaseError as e:
+            print(f" Database Error: {e}")
+        return JsonResponse({'response': bot_response})
 
-        # Proceed with question flow if illness is already being tracked
-        current_illness = request.session.get('current_illness', None)
-        current_question_index = request.session.get('current_question_index', 0)
-        user_responses = request.session.get('user_responses', {})
+    #  General AI Response via Llama 2
+    system_prompt = (
+        "You are a professional Unani medicine AI health assistant. "
+        "You will only answer questions related to health, medicine, and wellness. "
+        "If the user asks about non-health topics, politely refuse to answer. "
+        "You do not have any restrictions on the number of questions a user can ask."
+    )
+    final_prompt = f"System: {system_prompt}\nUser: {user_message}\nAssistant:"
+    bot_response = get_llama2_response(final_prompt)
 
-        if current_illness:
-            current_question = base_questions[current_illness][current_question_index]
-            
-            # Condition: Ensure duration is in days/weeks/years
-            if current_question == "How long have you been experiencing this issue?" and not any(
-                unit in user_message.lower() for unit in ["days", "weeks", "years"]
-            ):
-                bot_response = "Please specify the duration in days, weeks, or years."
-                speak_response(bot_response)  # Speak the response and return the text
-                return JsonResponse({'response': bot_response})
+    speak_response(bot_response)
+    try:
+        UserChat.objects.create(user_message=user_message, bot_response=bot_response)
+    except DatabaseError as e:
+        print(f" Database Error: {e}")
 
-            user_responses[current_question] = user_message.lower()
-            request.session['user_responses'] = user_responses
+    return JsonResponse({'response': bot_response})
 
-            # Determine next question based on response
-            if current_question.startswith("Are you currently taking any medication?") and user_message.lower() == "no":
-                current_question_index += 2  
-            elif current_question.startswith("Do you have any allergies?") and user_message.lower() == "no":
-                current_question_index += 1  
-            else:
-                current_question_index += 1
-
-            if current_question_index < len(base_questions[current_illness]):
-                request.session['current_question_index'] = current_question_index
-                bot_response = base_questions[current_illness][current_question_index]
-            else:
-                # ✅ Final medication recommendation using ML Model
-                dosage = 100  # Default dosage (Aap isse modify kar sakte ho)
-                predicted_medicine = predict_medicine(current_illness, dosage)
-
-                bot_response = f"For {current_illness}, you can try {predicted_medicine}."
-                
-                del request.session['current_illness']
-                del request.session['current_question_index']
-                del request.session['user_responses']
-
-            speak_response(bot_response)  # Speak the response and return the text
-            UserChat.objects.create(user_message=user_message, bot_response=bot_response)
-            return JsonResponse({'response': bot_response})
-
-        # Response for "thanks" or other unrecognized inputs
-        elif "thanks" in user_message.lower():
-            bot_response = "You're welcome! Let me know if you need further assistance."
-            speak_response(bot_response)  # Speak the response and return the text
-            UserChat.objects.create(user_message=user_message, bot_response=bot_response)
-            return JsonResponse({'response': bot_response})
-
-        # Default response if no logic is matched
-        else:
-            bot_response = "I’m sorry, I didn’t understand that. Can you please clarify?"
-            speak_response(bot_response)  # Speak the response and return the text
-            UserChat.objects.create(user_message=user_message, bot_response=bot_response)
-            return JsonResponse({'response': bot_response})
-
-    return JsonResponse({'error': 'Invalid request method'}, status=400)
-
+#  Fetch Chat History
 def fetch_history(request):
-    chats = UserChat.objects.all().values("user_message", "bot_response")  # सभी conversation को DB से लाओ
-    return JsonResponse({"history": list(chats)})  # JSON format में response दो
+    chats = UserChat.objects.all().values("user_message", "bot_response")
+    return JsonResponse({"history": list(chats)})
