@@ -12,25 +12,24 @@ def index(request):
     return render(request, 'index.html')
 
 def chat_view(request):
-    if request.method == "POST":
-        user_message = request.POST.get("message", "")
-        # Process the message (e.g., generate AI response)
-        return render(request, 'chat.html', {'user_message': user_message})
+    # This view is now for rendering the initial page
     return render(request, 'chat.html')
 
 @csrf_exempt
 def chatbot_response(request):
     if request.method == "POST":
         try:
+            # Parsing the message from the request body
             data = json.loads(request.body)
             user_message = data.get("message", "")
 
             if not user_message:
                 return JsonResponse({"error": "No message provided"}, status=400)
 
-            # Gemini AI se response fetch karna
+            # Call Gemini API to get a response
             response = model.generate_content(user_message)
 
+            # Send back the response as a JSON
             return JsonResponse({"response": response.text})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)

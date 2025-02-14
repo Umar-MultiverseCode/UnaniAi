@@ -145,6 +145,81 @@
             this.style.height = "auto";
             this.style.height = (this.scrollHeight) + "px";
         });
+    
+        // Submit the form via AJAX when Enter is pressed
+        document.querySelector(".chat-input").addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {  // If Enter is pressed without Shift
+                event.preventDefault();  // Prevent newline character and form submission
+                submitMessage();  // Call the function to submit the form using AJAX
+            }
+        });
+    
+        // Function to handle form submission with AJAX
+        function submitMessage() {
+            const message = document.querySelector(".chat-input").value;  // Get the message
+            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;  // Get CSRF token
+    
+            if (message.trim() === "") return;  // If the message is empty, do nothing
+    
+            // Add the user's message to the chat immediately
+            addMessageToChat("You", message);
+    
+            // Clear the input field
+            document.querySelector(".chat-input").value = '';
+    
+            fetch("{% url 'chatbot_response' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,  // Include CSRF token in headers
+                },
+                body: JSON.stringify({ message: message })  // Send the message in JSON format
+            })
+            .then(response => response.json())  // Parse the JSON response
+            .then(data => {
+                // Handle the response (add AI's message to the chat)
+                if (data.response) {
+                    addMessageToChat("UnaniAI", data.response);
+                } else if (data.error) {
+                    console.error("Error:", data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    
+        // Function to add message to chat window
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.querySelector(".chat-messages");
+    
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message", sender === "UnaniAI" ? "ai-message" : "user-message");
+    
+            const avatarDiv = document.createElement("div");
+            avatarDiv.classList.add("message-avatar");
+            avatarDiv.innerText = sender === "UnaniAI" ? "AI" : "You";
+    
+            const contentDiv = document.createElement("div");
+            contentDiv.classList.add("message-content", "glass");
+    
+            const headerDiv = document.createElement("div");
+            headerDiv.classList.add("message-header");
+            headerDiv.innerHTML = `<span class="sender">${sender}</span>`;
+            
+            const messageText = document.createElement("p");
+            messageText.innerText = message;
+    
+            contentDiv.appendChild(headerDiv);
+            contentDiv.appendChild(messageText);
+    
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+    
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to the bottom of the chat
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     </script>
+    
 </body>
 </html>
