@@ -116,8 +116,10 @@
                 </div>
             </div>
 
+            <!-- Chat Input Section -->
             <div class="chat-input-container glass">
-                <form class="chat-form">
+                <form class="chat-form" action="{% url 'chat_view' %}" method="POST">
+                    {% csrf_token %}
                     <textarea 
                         class="chat-input" 
                         placeholder="Message UnaniAI..."
@@ -134,5 +136,15 @@
             </div>
         </main>
     </div>
+
+    <script src="{% static 'js/chat.js' %}"></script>
+
+    <script>
+        // Auto-resizing textarea
+        document.querySelector(".chat-input").addEventListener("input", function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+    </script>
 </body>
 </html>
