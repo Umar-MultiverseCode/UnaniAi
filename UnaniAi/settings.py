@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-3s0s%rxa-yv5@qt)1(j3j4g5+kqrd=$6q3^lik=-4$#kgk_+hs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['b67d-111-125-210-132.ngrok-free.app','localhost', '127.0.0.1']
 
 
 # Application definition
@@ -133,3 +133,7 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Optional (for collectstatic)
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://b67d-111-125-210-132.ngrok-free.app',  # Add Ngrok URL here
+]
