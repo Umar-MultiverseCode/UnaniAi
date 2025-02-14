@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -14,6 +15,15 @@ def index(request):
 def chat_view(request):
     # This view is now for rendering the initial page
     return render(request, 'chat.html')
+
+def remove_markdown_formatting(text):
+    """
+    Removes any markdown-style formatting (e.g., **bold** or *italic*) from the response text.
+    """
+    # Remove markdown syntax (like **bold**, *italic*, and lists)
+    text = re.sub(r'(\*\*|\*|__|_)(.*?)\1', r'\2', text)  # Removes **bold** or *italic*
+    text = re.sub(r'\n\s*\*\s*(.*)', r'\1', text)  # Removes bullet points (list formatting)
+    return text.strip()
 
 def generate_chat_response(user_message):
     """
@@ -33,7 +43,9 @@ def generate_chat_response(user_message):
     
     # Call the Gemini model with the custom prompt
     response = model.generate_content(prompt)
-    return response.text.strip()
+    # Remove markdown formatting from the response
+    cleaned_response = remove_markdown_formatting(response.text)
+    return cleaned_response
 
 @csrf_exempt
 def chatbot_response(request):
