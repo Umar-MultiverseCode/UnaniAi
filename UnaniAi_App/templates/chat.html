@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UnaniAI Chat Interface</title>
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
+    <link rel="stylesheet" href="{% static 'css/history.css' %}">
+    <link rel="stylesheet" href="{% static 'css/logout.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -50,10 +52,12 @@
             </div>
 
             <div class="sidebar-footer glass">
-                <div class="user-profile">
-                    <div class="user-avatar">JD</div>
-                    <span>John Doe</span>
-                </div>
+                
+                <!-- Logout Button -->
+                <button class="logout-btn glass" onclick="logout()">
+                    <span>Logout</span>
+                    <div class="btn-glow"></div>
+                </button>
             </div>
         </aside>
 
@@ -64,6 +68,10 @@
                     <span class="model-name">UnaniAI Assistant</span>
                     <span class="model-version">3.5</span>
                 </div>
+                <button class="history-btn glass" onclick="toggleHistory()">
+                    <span>History</span>
+                    <div class="btn-glow"></div>
+                </button>
             </div>
 
             <div class="chat-messages">
@@ -135,6 +143,46 @@
                 </div>
             </div>
         </main>
+
+        <!-- History Window -->
+        <div class="history-window glass" id="historyWindow" style="display: none;">
+            <div class="history-header">
+                <h2>Chat History</h2>
+                <button class="close-history-btn glass" onclick="toggleHistory()">
+                    <span>Close</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+            <div class="history-content">
+                <!-- Displaying the actual conversation history -->
+                <div class="history-messages">
+                    {% for message, response, timestamp in history %}
+                        <div class="message user-message">
+                            <div class="message-avatar">U</div>
+                            <div class="message-content glass">
+                                <div class="message-header">
+                                    <span class="sender">You</span>
+                                </div>
+                                <p>{{ message }}</p>
+                            </div>
+                        </div>
+                        <div class="message ai-message">
+                            <div class="message-avatar">
+                                <div class="avatar-circle">
+                                    <div class="avatar-inner"></div>
+                                </div>
+                            </div>
+                            <div class="message-content glass">
+                                <div class="message-header">
+                                    <span class="sender">UnaniAI</span>
+                                </div>
+                                <p>{{ response }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="{% static 'js/chat.js' %}"></script>
@@ -219,7 +267,38 @@
             // Scroll to the bottom of the chat
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
+        // Function to toggle history window
+        function toggleHistory() {
+            const historyWindow = document.getElementById("historyWindow");
+            const chatMain = document.querySelector(".chat-main");
+        
+            if (historyWindow.style.display === "none" || historyWindow.style.display === "") {
+                historyWindow.style.display = "block"; // Show history window
+                chatMain.style.display = "none"; // Hide chat window
+            } else {
+                historyWindow.style.display = "none"; // Hide history window
+                chatMain.style.display = "flex"; // Show chat window (use flex to maintain layout)
+            }
+        }
+
+        // Function to handle logout
+        function logout() {
+            fetch("{% url 'logout' %}", {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "{% url 'index' %}";  // Redirect to home page
+                } else {
+                    console.error("Logout failed");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
-    
 </body>
 </html>
