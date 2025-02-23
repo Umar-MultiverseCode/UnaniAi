@@ -28,14 +28,6 @@ body {
     height: 100vh;
 }
 
-/* Glass Effect */
-.glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
-}
 
 /* Chat Container */
 .chat-container {
@@ -45,24 +37,11 @@ body {
     overflow: hidden;
 }
 
-/* Sidebar Styles */
-.chat-sidebar {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--glass-border);
-    background: var(--background-light);
-}
 
-.sidebar-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--glass-border);
-}
 
-.logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
+
+
+
 
 .neon-text {
     background: var(--primary-gradient);
@@ -71,21 +50,7 @@ body {
     text-shadow: var(--neon-glow);
 }
 
-.new-chat-btn {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
 
-.new-chat-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--neon-glow);
-}
 
 .chat-history {
     flex: 1;
@@ -93,41 +58,9 @@ body {
     padding: 1rem;
 }
 
-.history-section {
-    margin-bottom: 1.5rem;
-}
 
-.history-section h3 {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
-    padding: 0 0.5rem;
-}
 
-.history-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
 
-.history-item:hover {
-    transform: translateX(5px);
-    border-color: var(--accent-cyan);
-}
-
-.history-item.active {
-    background: rgba(0, 245, 255, 0.1);
-    border-color: var(--accent-cyan);
-}
-
-.sidebar-footer {
-    padding: 1rem;
-    border-top: 1px solid var(--glass-border);
-}
 
 .user-profile {
     display: flex;
@@ -178,6 +111,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    margin: 0px;
 }
 
 /* Message Container */
@@ -273,6 +207,7 @@ body {
 .message-ai .message-content {
     background: var(--background-light);
     color: var(--text-secondary);
+    
 }
 
 
@@ -414,4 +349,7 @@ body {
     border-color: var(--accent-cyan);
     box-shadow: var(--neon-glow);
 }
+
+
+
 

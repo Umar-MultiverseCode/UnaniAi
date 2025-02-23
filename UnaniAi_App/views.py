@@ -200,7 +200,7 @@ def generate_chat_response(user_message):
 
     # If no disease is found in database, use Gemini AI
     prompt = f"""
-    You are an expert in Unani medicine. Answer based on Unani principles.when user starts conversation with greetings answer As-salamu alaykum wa rahmatullahi wa barakatuh.Peace be upon you, and the mercy and blessings of Allah be upon you.How can I assist you today? in this format only.
+    You are an expert in Unani medicine. Answer based on Unani principles.when user starts conversation with greetings answer As-salamu alaykum wa rahmatullahi wa barakatuh.Peace be upon you, and the mercy and blessings of Allah be upon you.How can I assist you today?.
 
 
 

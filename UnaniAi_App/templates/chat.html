@@ -9,58 +9,18 @@
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     <link rel="stylesheet" href="{% static 'css/history.css' %}">
     <link rel="stylesheet" href="{% static 'css/logout.css' %}">
+    
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Include Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
+    
+    
 </head>
 <body>
     <div class="chat-container">
-        <!-- Sidebar -->
-        <aside class="chat-sidebar glass">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <span class="neon-text">Unani</span>AI
-                </div>
-                <button class="new-chat-btn glass">
-                    <span>New Chat</span>
-                    <div class="btn-glow"></div>
-                </button>
-            </div>
-
-            <div class="chat-history">
-                <div class="history-section">
-                    <h3>Today</h3>
-                    <div class="history-item glass active">
-                        <span class="history-icon">🌿</span>
-                        <span>Herbal Remedies for Anxiety</span>
-                    </div>
-                    <div class="history-item glass">
-                        <span class="history-icon">🍵</span>
-                        <span>Natural Sleep Solutions</span>
-                    </div>
-                </div>
-                
-                <div class="history-section">
-                    <h3>Yesterday</h3>
-                    <div class="history-item glass">
-                        <span class="history-icon">🌡️</span>
-                        <span>Fever Treatment</span>
-                    </div>
-                    <div class="history-item glass">
-                        <span class="history-icon">🍃</span>
-                        <span>Digestive Health Tips</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-footer glass">
-                
-                <!-- Logout Button -->
-                <button class="logout-btn glass" onclick="logout()">
-                    <span>Logout</span>
-                    <div class="btn-glow"></div>
-                </button>
-            </div>
-        </aside>
-
+        <div id="model-container"></div>
         <!-- Main Chat Area -->
         <main class="chat-main">
             <div class="chat-header glass">
@@ -72,6 +32,13 @@
                     <span>History</span>
                     <div class="btn-glow"></div>
                 </button>
+                <div class="button-container">
+                    
+                    <button class="logout-btn glass" onclick="logout()">
+                        <span>Logout</span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </div>
             </div>
 
             <div class="chat-messages">
@@ -299,6 +266,55 @@
             })
             .catch(error => console.error('Error:', error));
         }
+
+        // Load and render the 3D model
+        function loadModel() {
+            const container = document.getElementById('model-container');
+            const scene = new THREE.Scene();
+            
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0x000000, 0); // Transparent background
+            container.appendChild(renderer.domElement);
+
+            // Add lighting
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 5, 5).normalize();
+            scene.add(light);
+
+            // Load the GLB model
+            const loader = new THREE.GLTFLoader();
+            loader.load("{% static 'C:/Users/pc/Desktop/unani/UnaniAi/UnaniAi_App/static/ImageToStl.com_zuccarello.glb' %}", function (gltf) {
+                const model = gltf.scene;
+                scene.add(model);
+
+                // Set the model's scale
+                model.scale.set(1, 1, 1); // Adjust the scale as needed
+
+                // Set the model's position
+                model.position.set(0, -80, 0); // Adjust the position to lift the model up
+
+                // Adjust camera position
+                camera.position.set(0, 180, 150); // Move the camera back and up to capture the full height
+                camera.lookAt(new THREE.Vector3(0, 50, 0));
+
+                // Animation loop
+                function animate() {
+                    requestAnimationFrame(animate);
+                    model.rotation.y += 0.005; // Slow rotation
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }, undefined, function (error) {
+                console.error('Error loading model:', error);
+            });
+        }
+        
+        // Initialize the model loader
+        loadModel();
+        
     </script>
 </body>
 </html>
