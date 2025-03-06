@@ -16,6 +16,13 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Gmail ka SMTP server
+EMAIL_PORT = 587  # TLS encryption ke liye port
+EMAIL_USE_TLS = True  # TLS encryption enable karein
+EMAIL_HOST_USER = 'jahirshaikh162003@gmail.com'  # Apna Gmail address
+EMAIL_HOST_PASSWORD = 'ebwmahjnamuverkg'  # App password (without spaces)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/

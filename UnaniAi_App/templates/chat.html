@@ -16,28 +16,280 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
     
-    
+    <style>
+        /* Add this CSS for the sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px; /* Initially hidden */
+            width: 300px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0; /* Show sidebar */
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .close-sidebar-btn {
+            width: 50%;
+            background-color: yellow;
+        }
+
+        .menu-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .menu-btn.hide {
+            display: none; /* Hide menu button when sidebar is open */
+        }
+
+        /* Hamburger Icon */
+        .hamburger-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .hamburger-icon span {
+            width: 30px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        /* Blank window styles */
+        #blank-window {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1002;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #blank-window-content {
+            background: Transparent;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .body-part-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .body-part-images img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .body-part-images figure {
+            text-align: center;
+            margin: 0;
+        }
+        
+
+        .body-part-images img:hover {
+            transform: scale(1.1);
+        }
+
+        .body-part-images figcaption {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-blank-window-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Add this CSS for the dropdown */
+        .disease-dropdown {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: Transparent;
+            font-size: 16px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .disease-dropdown option {
+            padding: 10px;
+        }
+
+        /* Styling for History, Emergency, and Reminder Buttons */
+        .history-btn, .emergency-btn, .reminder-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            gap: 10px;
+            width: 50%;
+            margin-bottom: 10px;
+        }
+
+        .history-btn {
+            background-color: green;
+            color: white;
+        }
+
+        .emergency-btn {
+            background-color: red;
+            color: white;
+        }
+
+        .reminder-btn {
+            background-color: blue;
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7); /* Darker overlay for better focus */
+            justify-content: center;
+            align-items: center;
+            z-index: 1003; /* Ensure it's above other elements */
+        }
+        
+        .modal-content {
+            background: #ffffff; /* White background */
+            padding: 25px;
+            border-radius: 12px; /* Slightly rounded corners */
+            width: 90%; /* Responsive width */
+            max-width: 500px; /* Max width for larger screens */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
+            animation: fadeIn 0.3s ease; /* Smooth fade-in animation */
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0; /* Light border for separation */
+            padding-bottom: 10px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px; /* Larger font size for heading */
+            color: #333; /* Darker text for better readability */
+        }
+        
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 28px; /* Larger close button */
+            cursor: pointer;
+            color: #666; /* Grey color for close button */
+            transition: color 0.2s ease; /* Smooth color transition */
+        }
+        
+        .modal-header button:hover {
+            color: #333; /* Darker on hover */
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+            font-size: 16px; /* Comfortable font size */
+            color: #555; /* Slightly lighter text for body */
+        }
+        
+        .modal-footer {
+            text-align: right;
+            border-top: 1px solid #e0e0e0; /* Light border for separation */
+            padding-top: 15px;
+        }
+        
+        /* Fade-in animation for modal */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="chat-container">
-        <div id="model-container"></div>
+        <div id="model-container" onclick="openBlankWindow()"></div> <!-- Add click event here -->
         <!-- Main Chat Area -->
         <main class="chat-main">
             <div class="chat-header glass">
+                <!-- Menu Button -->
+                <button class="menu-btn glass" onclick="toggleSidebar()">
+                    <div class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="btn-glow"></div>
+                </button>
                 <div class="model-selector">
                     <span class="model-name">UnaniAI Assistant</span>
                     <span class="model-version">3.5</span>
-                </div>
-                <button class="history-btn glass" onclick="toggleHistory()">
-                    <span>History</span>
-                    <div class="btn-glow"></div>
-                </button>
-                <div class="button-container">
-                    
-                    <button class="logout-btn glass" onclick="logout()">
-                        <span>Logout</span>
-                        <div class="btn-glow"></div>
-                    </button>
                 </div>
             </div>
 
@@ -111,6 +363,37 @@
             </div>
         </main>
 
+        <!-- Sidebar -->
+        <div class="sidebar glass" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Menu</h2>
+            </div>
+            <div class="sidebar-content">
+                <button class="history-btn glass" onclick="toggleHistory()">
+                    <span>History</span>
+                    <div class="btn-glow"></div>
+                </button>
+                <button class="emergency-btn glass" onclick="handleEmergency()">
+                    <span>Emergency</span>
+                    <div class="btn-glow"></div>
+                </button>
+                <button class="reminder-btn glass" onclick="openReminderModal()">
+                    <span>Reminder</span>
+                    <div class="btn-glow"></div>
+                </button>
+                <button class="logout-btn glass" onclick="logout()">
+                    <span>Logout</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+            <div class="sidebar-footer">
+                <button class="close-sidebar-btn glass" onclick="toggleSidebar()">
+                    <span>Close</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+        </div>
+
         <!-- History Window -->
         <div class="history-window glass" id="historyWindow" style="display: none;">
             <div class="history-header">
@@ -149,6 +432,104 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Reminder Modal -->
+    <div id="reminderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Your Medicine Reminders</h2>
+                <button onclick="closeReminderModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Medicine Name</th>
+                            <th>Dosage</th>
+                            <th>Schedule</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reminder in reminders %}
+                        <tr>
+                            <td>{{ reminder.medicine_name }}</td>
+                            <td>{{ reminder.dosage }}</td>
+                            <td>{{ reminder.schedule }}</td>
+                            <td>{{ reminder.start_date }}</td>
+                            <td>{{ reminder.end_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button onclick="openAddReminderModal()" class="btn btn-success">Add New Reminder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Reminder Modal -->
+    <div id="addReminderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Medicine Reminder</h2>
+                <button onclick="closeAddReminderModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addReminderForm">
+                    <label for="medicine_name">Medicine Name:</label>
+                    <input type="text" id="medicine_name" name="medicine_name" required><br><br>
+                    
+                    <label for="dosage">Dosage:</label>
+                    <input type="text" id="dosage" name="dosage" required><br><br>
+                    
+                    <label for="schedule">Schedule (e.g., 08:00 AM, 02:00 PM, 08:00 PM):</label>
+                    <input type="text" id="schedule" name="schedule" required><br><br>
+                    
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date" required><br><br>
+                    
+                    <label for="end_date">End Date:</label>
+                    <input type="date" id="end_date" name="end_date"><br><br>
+                    
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" onclick="closeAddReminderModal()" class="btn btn-secondary">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blank Window -->
+    <div id="blank-window">
+        <div id="blank-window-content">
+            <h2>Body Parts</h2>
+            <div class="body-part-images">
+                <figure>
+                    <img src="{% static 'images/head.png' %}" alt="Head" onclick="showBodyPartInfo('Head')">
+                    <figcaption>Head</figcaption>
+                </figure>
+                <figure>
+                    <img src="{% static 'images/heart.jpg' %}" alt="Heart" onclick="showBodyPartInfo('Heart')">
+                    <figcaption>Heart</figcaption>
+                </figure>
+                <figure>
+                    <img src="{% static 'images/intestine.png' %}" alt="Intestine" onclick="showBodyPartInfo('Intestine')">
+                    <figcaption>Intestine</figcaption>
+                </figure>
+                <figure>
+                    <img src="{% static 'images/lungs.png' %}" alt="Lungs" onclick="showBodyPartInfo('Lungs')">
+                    <figcaption>Lungs</figcaption>
+                </figure>
+                <figure>
+                    <img src="{% static 'images/liver.png' %}" alt="Liver" onclick="showBodyPartInfo('Liver')">
+                    <figcaption>Liver</figcaption>
+                </figure>
+            </div>
+            <button class="close-blank-window-btn" onclick="closeBlankWindow()">Close</button>
         </div>
     </div>
 
@@ -235,6 +616,14 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        // Function to toggle sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const menuBtn = document.querySelector(".menu-btn");
+            sidebar.classList.toggle("open");
+            menuBtn.classList.toggle("hide"); // Hide/show menu button
+        }
+
         // Function to toggle history window
         function toggleHistory() {
             const historyWindow = document.getElementById("historyWindow");
@@ -267,11 +656,115 @@
             .catch(error => console.error('Error:', error));
         }
 
+        // Function to open blank window
+        function openBlankWindow() {
+            const blankWindow = document.getElementById("blank-window");
+            blankWindow.style.display = "flex";
+        }
+
+        // Function to close blank window
+        function closeBlankWindow() {
+            const blankWindow = document.getElementById("blank-window");
+            blankWindow.style.display = "none";
+        }
+
+        // Function to show body part info and display dropdown in chat
+        function showBodyPartInfo(part) {
+            // Close the blank window
+            closeBlankWindow();
+
+            // Get the chat input container
+            const chatInputContainer = document.querySelector(".chat-input-container");
+
+            // Create a dropdown element
+            const dropdown = document.createElement("select");
+            dropdown.classList.add("disease-dropdown");
+            dropdown.innerHTML = `<option value="">Select a disease related to ${part}</option>`;
+
+            // Add diseases to the dropdown
+            const diseases = {
+                Head: ["Migraine", "Sinusitis", "Tension Headache", "Cluster Headache"],
+                Heart: ["Hypertension", "Coronary Artery Disease", "Arrhythmia", "Heart Failure"],
+                Intestine: ["Irritable Bowel Syndrome", "Ulcerative Colitis", "Crohn's Disease", "Diverticulitis"],
+                Lungs: ["Asthma", "Chronic Obstructive Pulmonary Disease", "Pneumonia", "Lung Cancer"],
+                Liver: ["Hepatitis", "Cirrhosis", "Fatty Liver Disease", "Liver Cancer"]
+            };
+
+            diseases[part].forEach(disease => {
+                const option = document.createElement("option");
+                option.value = disease;
+                option.textContent = disease;
+                dropdown.appendChild(option);
+            });
+
+            // Add an event listener to the dropdown
+            dropdown.addEventListener("change", function () {
+                if (this.value) {
+                    // Add the selected disease to the chat input
+                    const chatInput = document.querySelector(".chat-input");
+                    chatInput.value = `Tell me about ${this.value}`;
+                    submitMessage(); // Automatically submit the message
+                    dropdown.remove();
+                }
+            });
+
+            // Append the dropdown to the chat input container
+            chatInputContainer.insertBefore(dropdown, chatInputContainer.firstChild);
+        }
+
+        function handleEmergency() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+        
+                        // API call to fetch nearby hospitals/clinics
+                        fetch("/emergency_assistance/", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": "{{ csrf_token }}",  // CSRF token for Django
+                            },
+                            body: JSON.stringify({
+                                latitude: userLat,
+                                longitude: userLon,
+                            }),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.facilities) {
+                                let output = "<h2>Nearest Unani Clinics/Hospitals:</h2>";
+                                data.facilities.forEach(facility => {
+                                    output += `
+                                        <div class="facility">
+                                            <h3>${facility.name}</h3>
+                                            <p>Address: ${facility.address}</p>
+                                            <p>Rating: ${facility.rating}</p>
+                                        </div>
+                                    `;
+                                });
+                                document.getElementById("emergencyOutput").innerHTML = output;
+                            } else if (data.error) {
+                                document.getElementById("emergencyOutput").innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                            }
+                        })
+                        .catch(error => console.error("Error:", error));
+                    },
+                    (error) => {
+                        alert("Error fetching location. Please enable location access.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        }
         // Load and render the 3D model
-        function loadModel() {
+        // Load and render the image
+        function loadImage() {
             const container = document.getElementById('model-container');
             const scene = new THREE.Scene();
-            
+
             const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 
@@ -284,37 +777,90 @@
             light.position.set(5, 5, 5).normalize();
             scene.add(light);
 
-            // Load the GLB model
-            const loader = new THREE.GLTFLoader();
-            loader.load("{% static 'C:/Users/pc/Desktop/unani/UnaniAi/UnaniAi_App/static/ImageToStl.com_zuccarello.glb' %}", function (gltf) {
-                const model = gltf.scene;
-                scene.add(model);
+            // Create a texture loader
+            const textureLoader = new THREE.TextureLoader();
+            const imageUrl = "{% static 'C:/Users/pc/Desktop/unani/UnaniAi/UnaniAi_App/static/images/5545023.jpg' %}"; // Replace with your image path
 
-                // Set the model's scale
-                model.scale.set(1, 1, 1); // Adjust the scale as needed
+            // Load the image as a texture
+            textureLoader.load(imageUrl, function (texture) {
+                const geometry = new THREE.PlaneGeometry(200, 200); // Adjust size as needed
+                const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+                const imageMesh = new THREE.Mesh(geometry, material);
 
-                // Set the model's position
-                model.position.set(0, -80, 0); // Adjust the position to lift the model up
+                // Set the image position
+                imageMesh.position.set(0, 0, 0);
+                scene.add(imageMesh);
 
                 // Adjust camera position
-                camera.position.set(0, 180, 150); // Move the camera back and up to capture the full height
-                camera.lookAt(new THREE.Vector3(0, 50, 0));
+                camera.position.set(0, 0, 300); // Adjust camera position to fit the image
+                camera.lookAt(0, 0, 0);
 
-                // Animation loop
+                // Animation loop (No rotation, just rendering)
                 function animate() {
                     requestAnimationFrame(animate);
-                    model.rotation.y += 0.005; // Slow rotation
                     renderer.render(scene, camera);
                 }
                 animate();
             }, undefined, function (error) {
-                console.error('Error loading model:', error);
+                console.error('Error loading image:', error);
             });
         }
-        
-        // Initialize the model loader
-        loadModel();
-        
+
+        // Initialize the image loader
+        loadImage();
+
+        // Function to open the reminder modal
+        function openReminderModal() {
+            document.getElementById("reminderModal").style.display = "flex";
+        }
+
+        // Function to close the reminder modal
+        function closeReminderModal() {
+            document.getElementById("reminderModal").style.display = "none";
+        }
+
+        // Function to open the add reminder modal
+        function openAddReminderModal() {
+            document.getElementById("addReminderModal").style.display = "flex";
+            closeReminderModal(); // Close the reminder modal
+        }
+
+        // Function to close the add reminder modal
+        function closeAddReminderModal() {
+            document.getElementById("addReminderModal").style.display = "none";
+        }
+
+        // Function to handle form submission for adding a reminder
+        document.getElementById("addReminderForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                medicine_name: formData.get("medicine_name"),
+                dosage: formData.get("dosage"),
+                schedule: formData.get("schedule"),
+                start_date: formData.get("start_date"),
+                end_date: formData.get("end_date"),
+            };
+
+            fetch("/add_medicine_reminder/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert("Reminder added successfully!");
+                    window.location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
     </script>
 </body>
 </html>

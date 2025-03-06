@@ -1,16 +1,24 @@
 import re
 import sqlite3
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 import google.generativeai as genai
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from datetime import datetime
+import json
+import requests  # Google Places API ke liye
 
 # Gemini API Setup
 genai.configure(api_key="AIzaSyCnLkFs3-8aufez4jPpQFnahj4ropCNBfg")
 model = genai.GenerativeModel("gemini-1.5-flash")
+
+# Google Places API Key
+GOOGLE_PLACES_API_KEY = "YOUR_GOOGLE_PLACES_API_KEY"  # Apna API key daalein
 
 # SQLite Database Setup
 def create_database():
@@ -42,6 +50,31 @@ def create_database():
         )
     ''')
 
+    # Medicine Reminders table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS medicine_reminders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            medicine_name TEXT NOT NULL,
+            dosage TEXT NOT NULL,
+            schedule TEXT NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+
+    # Unani Ingredients table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS unani_ingredients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ingredient_name TEXT NOT NULL,
+            benefits TEXT NOT NULL,
+            usage TEXT NOT NULL,
+            diseases TEXT NOT NULL  
+        )
+    ''')
+
     conn.commit()
     conn.close()
     print("Database and tables created successfully!")  # Debugging ke liye
@@ -49,24 +82,228 @@ create_database()
 
 # Temporary Unani Medicine Database
 unani_medicines = {
-    "fever": {
-        "symptoms": ["High temperature", "Sweating", "Chills", "Body ache"],
-        "treatment": ["Drink herbal mint tea", "Apply sandalwood paste", "Stay hydrated"],
-        "medicine": [
-            {"name": "Hamdard Joshina", "link": "https://www.amazon.in/dp/B08XYZ1234"},
-            {"name": "Dabur Tulsi Drops", "link": "https://www.dabur.com/tulsi-drops"}
-        ]
-    },
     "cough": {
         "symptoms": ["Dry throat", "Chest congestion", "Difficulty breathing"],
         "treatment": ["Take honey with ginger", "Drink liquorice root tea"],
         "medicine": [
-            {"name": "Hamdard Khamira Marwareed", "link": "https://www.hamdarsonlinestore.com/khamira-marwareed"},
-            {"name": "Baidyanath Chyawanprash", "link": "https://www.baidyanath.com/chyawanprash"}
+            {"name": "Marzanjosh", "link": "https://aetmaad.co.in/product/al-marzanjosh", "price": 300}
+        ]
+    },
+    "malaria": {
+        "symptoms": ["High fever", "Chills", "Headache", "Fatigue"],
+        "treatment": ["Stay hydrated", "Rest", "Use mosquito nets"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "constipation": {
+        "symptoms": ["Difficulty passing stool", "Bloating", "Abdominal pain"],
+        "treatment": ["Increase fiber intake", "Drink plenty of water"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "peristalsis": {
+        "symptoms": ["Irregular bowel movements", "Abdominal discomfort"],
+        "treatment": ["Eat fiber-rich foods", "Exercise regularly"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "piles": {
+        "symptoms": ["Pain during bowel movements", "Itching around the anus"],
+        "treatment": ["Use warm sitz baths", "Apply aloe vera gel"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "dysentery": {
+        "symptoms": ["Diarrhea", "Abdominal cramps", "Fever"],
+        "treatment": ["Stay hydrated", "Avoid spicy food"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "hepatomegaly": {
+        "symptoms": ["Abdominal swelling", "Fatigue", "Jaundice"],
+        "treatment": ["Avoid alcohol", "Eat a balanced diet"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "spleenomegaly": {
+        "symptoms": ["Abdominal pain", "Feeling full quickly"],
+        "treatment": ["Avoid heavy meals", "Rest"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "jaundice": {
+        "symptoms": ["Yellowing of skin", "Dark urine", "Fatigue"],
+        "treatment": ["Drink plenty of fluids", "Avoid fatty foods"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "gouts": {
+        "symptoms": ["Joint pain", "Swelling", "Redness"],
+        "treatment": ["Avoid purine-rich foods", "Stay hydrated"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "rheumatism": {
+        "symptoms": ["Joint pain", "Stiffness", "Swelling"],
+        "treatment": ["Apply warm compresses", "Exercise regularly"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "anaemia": {
+        "symptoms": ["Fatigue", "Pale skin", "Shortness of breath"],
+        "treatment": ["Eat iron-rich foods", "Take vitamin C supplements"],
+        "medicine": [
+            {"name": "Sanna Makki", "link": "https://aetmaad.co.in/product/sanna-makki", "price": 70}
+        ]
+    },
+    "blood pressure": {
+        "symptoms": ["Headache", "Dizziness", "Blurred vision"],
+        "treatment": ["Reduce salt intake", "Exercise regularly"],
+        "medicine": [
+            {"name": "Qalbi Nuska", "link": "https://aetmaad.co.in/product/qalbi-nuska", "price": 600}
+        ]
+    },
+    "joint pain": {
+        "symptoms": ["Pain in joints", "Swelling", "Stiffness"],
+        "treatment": ["Apply warm oil", "Massage gently"],
+        "medicine": [
+            {"name": "Rumabil", "link": "https://aetmaad.co.in/product/rumabil", "price": 300}
+        ]
+    },
+    "ulcers": {
+        "symptoms": ["Burning stomach pain", "Nausea", "Bloating"],
+        "treatment": ["Avoid spicy food", "Eat small meals"],
+        "medicine": [
+            {"name": "Al-Rehan", "link": "https://aetmaad.co.in/product/al-rehan", "price": 300}
+        ]
+    },
+    "sore throats": {
+        "symptoms": ["Pain while swallowing", "Dry throat", "Swollen glands"],
+        "treatment": ["Gargle with salt water", "Drink warm fluids"],
+        "medicine": [
+            {"name": "Multi Flora Honey", "link": "https://aetmaad.co.in/product/multi-flora-honey", "price": 600}
+        ]
+    },
+    "skin irritations": {
+        "symptoms": ["Redness", "Itching", "Rashes"],
+        "treatment": ["Apply aloe vera gel", "Avoid harsh soaps"],
+        "medicine": [
+            {"name": "Multi Flora Honey", "link": "https://aetmaad.co.in/product/multi-flora-honey", "price": 600}
+        ]
+    },
+    "hair loss": {
+        "symptoms": ["Thinning hair", "Bald patches", "Excessive shedding"],
+        "treatment": ["Massage scalp with oil", "Eat protein-rich foods"],
+        "medicine": [
+            {"name": "Tulsi Honey", "link": "https://aetmaad.co.in/product/tulsi-honey", "price": 600}
+        ]
+    },
+    "infections": {
+        "symptoms": ["Fever", "Fatigue", "Swelling"],
+        "treatment": ["Maintain hygiene", "Take prescribed antibiotics"],
+        "medicine": [
+            {"name": "Tulsi Honey", "link": "https://aetmaad.co.in/product/tulsi-honey", "price": 600}
+        ]
+    },
+    "fever": {
+        "symptoms": ["High temperature", "Sweating", "Chills", "Body ache"],
+        "treatment": ["Drink herbal mint tea", "Apply sandalwood paste", "Stay hydrated"],
+        "medicine": [
+            {"name": "Tulsi Honey", "link": "https://aetmaad.co.in/product/tulsi-honey", "price": 600}
         ]
     }
 }
 
+# Temporary Unani Ingredients Database
+unani_ingredients = [
+    
+]
+
+# Populate Unani Ingredients Database
+def populate_unani_ingredients():
+    """
+    Populates the unani_ingredients table with sample data.
+    """
+    conn = sqlite3.connect('signup.db')
+    cursor = conn.cursor()
+    for ingredient in unani_ingredients:
+        cursor.execute('''
+            INSERT INTO unani_ingredients (ingredient_name, benefits, usage, diseases)
+            VALUES (?, ?, ?, ?)
+        ''', (ingredient["ingredient_name"], ingredient["benefits"], ingredient["usage"], ingredient["diseases"]))
+    conn.commit()
+    conn.close()
+    print("Unani ingredients database populated successfully!")
+populate_unani_ingredients()
+
+# Fetch Unani Ingredients for a Disease
+def get_unani_ingredients(disease):
+    """
+    Fetches Unani ingredients for a specific disease.
+    """
+    conn = sqlite3.connect('signup.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT ingredient_name, benefits, usage
+        FROM unani_ingredients
+        WHERE diseases LIKE ?
+    ''', (f"%{disease}%",))
+    ingredients = cursor.fetchall()
+    conn.close()
+    return ingredients
+
+# Generate Chatbot Response
+# Generate Chatbot Response
+def generate_chat_response(user_message):
+    """
+    Checks Unani medicine database first, then suggests ingredients if disease is not found.
+    """
+    words = user_message.lower().split()
+    for word in words:
+        if word in unani_medicines:
+            data = unani_medicines[word]
+            response = f"**Unani Treatment for {word.capitalize()}**\n"
+            response += f"🔹 **Symptoms:** {', '.join(data['symptoms'])}\n"
+            response += f"🩺 **Treatment:** {', '.join(data['treatment'])}\n"
+
+            if "medicine" in data and data["medicine"]:
+                response += "\n🛒 **Recommended Medicines:**\n"
+                for med in data["medicine"]:
+                    response += f"🔹 [{med['name']}]({med['link']})\n"
+
+            return response
+
+    # If no disease is found in database, suggest Unani ingredients
+    ingredients = get_unani_ingredients(user_message.lower())
+    if ingredients:
+        response = f"**Unani Ingredients for {user_message.capitalize()}**\n"
+        for ingredient in ingredients:
+            response += f"🔹 **{ingredient[0]}**\n"
+            response += f"   - **Benefits:** {ingredient[1]}\n"
+            response += f"   - **Usage:** {ingredient[2]}\n"
+        return response
+    else:
+        # If no ingredients are found, use Gemini AI
+        prompt = f"""
+        You are an expert in Unani medicine. Answer based on Unani principles. When the user starts the conversation with greetings, respond with: 
+        "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
+
+        The user is asking about the disease except the greetings: {user_message}. Since this disease is not in our database, please suggest natural Unani ingredients or remedies to manage or treat this condition. Provide detailed information about the ingredients, their benefits, and how to use them. Ensure the response is clear, concise, and based on Unani principles.
+
+        Bot:
+        """
+        response = model.generate_content(prompt)
+        return response.text
 # Home Page
 def index(request):
     """
@@ -166,50 +403,6 @@ def remove_markdown_formatting(text):
     text = re.sub(r'\n\s*\*\s*(.*)', r'\1', text)  # Removes bullet points (list formatting)
     return text.strip()
 
-# Fetch Unani Remedy
-def get_unani_remedy(disease):
-    """
-    Fetches Unani treatment details along with medicine links.
-    """
-    disease = disease.lower()
-    if disease in unani_medicines:
-        data = unani_medicines[disease]
-        response = f"**Unani Treatment for {disease.capitalize()}**\n"
-        response += f"🔹 **Symptoms:** {', '.join(data['symptoms'])}\n"
-        response += f"🩺 **Treatment:** {', '.join(data['treatment'])}\n"
-
-        if "medicine" in data and data["medicine"]:
-            response += "\n🛒 **Recommended Medicines:**\n"
-            for med in data["medicine"]:
-                response += f"🔹 [{med['name']}]({med['link']})\n"
-
-        return response
-    else:
-        return None  # Disease not found
-
-# Generate Chatbot Response
-def generate_chat_response(user_message):
-    """
-    Checks Unani medicine database first, then calls Gemini AI if needed.
-    """
-    words = user_message.lower().split()
-    for word in words:
-        remedy = get_unani_remedy(word)
-        if remedy:
-            return remedy  # Returns treatment + medicine links
-
-    # If no disease is found in database, use Gemini AI
-    prompt = f"""
-    You are an expert in Unani medicine. Answer based on Unani principles.when user starts conversation with greetings answer As-salamu alaykum wa rahmatullahi wa barakatuh.Peace be upon you, and the mercy and blessings of Allah be upon you.How can I assist you today?.
-
-
-
-    User: {user_message}
-    Bot:
-    """
-    response = model.generate_content(prompt)
-    return response.text
-
 # Fetch Conversation History
 def get_conversation_history(user_id):
     """
@@ -261,3 +454,189 @@ def chatbot_response(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+# Emergency Assistance Functionality
+@csrf_exempt
+def emergency_assistance(request):
+    if request.method == "POST":
+        try:
+            # Parse the request body
+            data = json.loads(request.body)
+            user_lat = data.get("latitude")
+            user_lon = data.get("longitude")
+
+            # Call Google Places API to find nearby hospitals/clinics
+            url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={user_lat},{user_lon}&radius=5000&type=hospital&keyword=Unani&key={GOOGLE_PLACES_API_KEY}"
+            response = requests.get(url)
+            places_data = response.json()
+
+            # Format the response
+            facilities = []
+            for place in places_data.get("results", []):
+                facilities.append({
+                    "name": place.get("name"),
+                    "address": place.get("vicinity"),
+                    "rating": place.get("rating", "N/A"),
+                })
+
+            # Return the response
+            return JsonResponse({"facilities": facilities})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=400)
+
+# Temporary storage for medicine reminders (replace with database in production)
+# Global list to store medicine reminders
+medicine_reminders_list = []
+
+@csrf_exempt
+def add_medicine_reminder(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            medicine_name = data.get("medicine_name")
+            dosage = data.get("dosage")
+            schedule = data.get("schedule")  # e.g., "08:00 AM, 02:00 PM, 08:00 PM"
+            start_date = data.get("start_date")
+            end_date = data.get("end_date")
+
+            # Fetch user_id from session
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return JsonResponse({"status": "error", "message": "User not logged in"}, status=401)
+
+            # Save the reminder in the database
+            conn = sqlite3.connect('signup.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO medicine_reminders (user_id, medicine_name, dosage, schedule, start_date, end_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, medicine_name, dosage, schedule, start_date, end_date))
+            conn.commit()
+            conn.close()
+
+            return JsonResponse({"status": "success"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+@csrf_exempt
+def medicine_reminders(request):
+    """
+    Fetches reminders for the logged-in user.
+    """
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({"status": "error", "message": "User not logged in"}, status=401)
+
+    # Fetch reminders from the database
+    conn = sqlite3.connect('signup.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT medicine_name, dosage, schedule, start_date, end_date
+        FROM medicine_reminders
+        WHERE user_id = ?
+    ''', (user_id,))
+    reminders = cursor.fetchall()
+    conn.close()
+
+    # Format the reminders
+    formatted_reminders = []
+    for reminder in reminders:
+        formatted_reminders.append({
+            "medicine_name": reminder[0],
+            "dosage": reminder[1],
+            "schedule": reminder[2],
+            "start_date": reminder[3],
+            "end_date": reminder[4],
+        })
+
+    return JsonResponse({"reminders": formatted_reminders})
+
+@csrf_exempt
+def send_medicine_reminders(request):
+    """
+    Sends email reminders for medicine schedules to the logged-in user's email.
+    All emails are sent FROM jahirshaikh162003@gmail.com.
+    """
+    if request.method == "POST":
+        try:
+            now = datetime.now().strftime("%I:%M %p")  # Current time in 12-hour format
+            print(f"Current time: {now}")  # Debugging log
+
+            # Fetch the logged-in user's email
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return JsonResponse({"status": "error", "message": "User not logged in"}, status=401)
+
+            conn = sqlite3.connect('signup.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT email FROM users WHERE id = ?", (user_id,))
+            email = cursor.fetchone()[0]  # Fetch the logged-in user's email
+            conn.close()
+
+            print(f"Logged-in user's email: {email}")  # Debugging log
+
+            # Fetch reminders for the logged-in user from the database
+            conn = sqlite3.connect('signup.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT medicine_name, dosage, schedule
+                FROM medicine_reminders
+                WHERE user_id = ?
+            ''', (user_id,))
+            reminders = cursor.fetchall()
+            conn.close()
+
+            print(f"Fetched reminders: {reminders}")  # Debugging log
+
+            # Iterate through all reminders
+            for reminder in reminders:
+                medicine_name = reminder[0]
+                dosage = reminder[1]
+                schedule = reminder[2]
+
+                print(f"Checking reminder for {email}: {medicine_name} at {schedule}")  # Debugging log
+
+                # Check if the current time matches any of the scheduled times
+                if now in schedule:
+                    print(f"Time match found for {email}")  # Debugging log
+
+                    # Send the reminder email
+                    print(f"Sending email to: {email}")  # Debugging log
+                    subject = f"Reminder: Take {medicine_name}"
+                    message = f"Hello,\n\nIt's time to take your medicine:\n\nMedicine: {medicine_name}\nDosage: {dosage}\n\nThank you!"
+                    try:
+                        send_mail(
+                            subject,  # Email subject
+                            message,  # Email message
+                            'jahirshaikh162003@gmail.com',  # FROM email address
+                            [email],  # TO email address (logged-in user's email)
+                            fail_silently=False,
+                        )
+                        print(f"Email sent to {email}")  # Debugging log
+                    except Exception as e:
+                        print(f"Error sending email to {email}: {e}")  # Debugging log
+
+                    # Return a success message with an alert
+                    return JsonResponse({
+                        "status": "success",
+                        "message": f"Reminder sent to {email} at {now}.",
+                        "alert": "Email reminder sent successfully!"
+                    })
+
+            print("No reminders to send at this time.")  # Debugging log
+            return JsonResponse({
+                "status": "success",
+                "message": "No reminders to send at this time."
+            })
+        except Exception as e:
+            print(f"Error in send_medicine_reminders: {e}")  # Debugging log
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            }, status=500)
+    return JsonResponse({
+        "status": "error",
+        "message": "Invalid request method"
+    }, status=400)
