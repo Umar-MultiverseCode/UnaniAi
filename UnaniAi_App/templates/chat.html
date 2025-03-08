@@ -433,7 +433,7 @@
                                 <div class="message-header">
                                     <span class="sender">UnaniAI</span>
                                 </div>
-                                <p>{{ response }}</p>
+                                <p>{{ response|safe }}</p> <!-- Yeh change: |safe add kiya -->
                             </div>
                         </div>
                     {% endfor %}
@@ -593,33 +593,32 @@
         // Function to add message to chat window
         function addMessageToChat(sender, message) {
             const chatMessages = document.querySelector(".chat-messages");
-    
+        
             const messageDiv = document.createElement("div");
             messageDiv.classList.add("message", sender === "UnaniAI" ? "ai-message" : "user-message");
-    
+        
             const avatarDiv = document.createElement("div");
             avatarDiv.classList.add("message-avatar");
             avatarDiv.innerText = sender === "UnaniAI" ? "AI" : "You";
-    
+        
             const contentDiv = document.createElement("div");
             contentDiv.classList.add("message-content", "glass");
-    
+        
             const headerDiv = document.createElement("div");
             headerDiv.classList.add("message-header");
             headerDiv.innerHTML = `<span class="sender">${sender}</span>`;
             
             const messageText = document.createElement("p");
-            messageText.innerText = message;
-    
+            messageText.innerHTML = message; // Yeh change: innerText ki jagah innerHTML
+        
             contentDiv.appendChild(headerDiv);
             contentDiv.appendChild(messageText);
-    
+        
             messageDiv.appendChild(avatarDiv);
             messageDiv.appendChild(contentDiv);
-    
+        
             chatMessages.appendChild(messageDiv);
             
-            // Scroll to the bottom of the chat
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 

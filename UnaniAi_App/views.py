@@ -225,9 +225,7 @@ unani_medicines = {
 }
 
 # Temporary Unani Ingredients Database
-unani_ingredients = [
-    
-]
+unani_ingredients = []
 
 # Populate Unani Ingredients Database
 def populate_unani_ingredients():
@@ -264,47 +262,43 @@ def get_unani_ingredients(disease):
 
 def generate_chat_response(user_message):
     """
-    Checks Unani medicine database first, then suggests ingredients if disease is not found.
+    Generates a clean, table-formatted response for Unani medicine queries with inline CSS.
     """
     words = user_message.lower().split()
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
-            response = f"<h3>Unani Treatment for {word.capitalize()}</h3>"
+            response = f"<h3 style='color: #333;'>Unani Treatment for {word.capitalize()}</h3>"
             response += f"<p><strong>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
             response += f"<p><strong>Treatment:</strong> {', '.join(data['treatment'])}</p>"
-
             if "medicine" in data and data["medicine"]:
                 response += "<h4>Recommended Medicines:</h4>"
                 for med in data["medicine"]:
-                    response += f"<p><a href='{med['link']}'>{med['name']}</a></p>"
+                    response += f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>"
             return response
 
-    # If no disease is found in database, suggest Unani ingredients
+    # Check Unani ingredients table
     ingredients = get_unani_ingredients(user_message.lower())
     if ingredients:
-        # Start building the HTML table rows
         table_rows = ""
         for ingredient in ingredients:
             table_rows += f"""
-                <tr>
-                    <td>{ingredient[0]}</td>
-                    <td>{ingredient[2]}</td>
-                    <td>{ingredient[1]}</td>
-                    <td>{ingredient[3] if len(ingredient) > 3 else 'N/A'}</td>
+                <tr style='border: 1px solid #ddd; background-color: #f9f9f9;'>
+                    <td style='padding: 8px;'>{ingredient[0]}</td>
+                    <td style='padding: 8px;'>{ingredient[2]}</td>
+                    <td style='padding: 8px;'>{ingredient[1]}</td>
+                    <td style='padding: 8px;'>N/A</td>
                 </tr>
             """
-        
-        # Combine the HTML template with dynamic data
         response = f"""
-        <h3>Unani Ingredients for {user_message.capitalize()}</h3>
-        <table id="ingredients-table">
+        <h3 style='color: #333;'>Unani Ingredients for {user_message.capitalize()}</h3>
+        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
             <thead>
-                <tr>
-                    <th>Ingredient</th>
-                    <th>Dosage</th>
-                    <th>Benefits</th>
-                    <th>Cautions</th>
+                <tr style='background-color: #f2f2f2;'>
+                    <th style='border: 1px solid #ddd; padding: 8px;'>Ingredient</th>
+                    <th style='border: 1px solid #ddd; padding: 8px;'>Dosage</th>
+                    <th style='border: 1px solid #ddd; padding: 8px;'>Benefits</th>
+                    <th style='border: 1px solid #ddd; padding: 8px;'>Precautions</th>
                 </tr>
             </thead>
             <tbody>
@@ -313,27 +307,75 @@ def generate_chat_response(user_message):
         </table>
         """
         return response
-    else:
-        # If no ingredients are found, use Gemini AI
-        prompt = f"""
-            You are an expert in Unani medicine. Answer based on Unani principles. When the user starts the conversation with greetings, respond with: 
-            "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
 
-            The user is asking about the disease except the greetings: {user_message}. Since this disease is not in our database, please suggest only prophetic Unani ingredients or remedies to manage or treat this condition. Provide detailed information about the ingredients, their benefits, and how to use them. Ensure the response is clear, concise, and based on prophetic Unani principles. Provide the ingredients, dosages, and benefits in the following **structured table format**:
+    # Fallback to Gemini API
+    prompt = f"""
+    You are an expert in Unani medicine. Answer based on Unani principles. 
+    When the user starts the conversation with greetings, respond with: 
+    "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
+    
+    The user is asking about: {user_message}. Since this disease is not in our database, 
+    suggest only prophetic Unani ingredients or remedies to manage or treat this condition. 
+    Provide the response in this exact table format:
 
-            | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
-            |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
-            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
-            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
-            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
+    | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
+    |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
+    | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
 
-            At the end, write "Indeed, the cure is Allah's will."
+    At the end, write "Indeed, the cure is Allah's will."
+    """
 
-            Bot:
-            """
+    gemini_response = model.generate_content(prompt).text
+    cleaned_response = remove_markdown_formatting(gemini_response)
 
-        response = model.generate_content(prompt)
-        return response.text
+    # Parse Gemini response into a table
+    lines = cleaned_response.split('\n')
+    table_rows = ""
+    in_table = False
+    for line in lines:
+        if line.startswith('| Ingredient'):
+            in_table = True  # Table header detected
+            continue
+        if in_table and line.startswith('|'):
+            if line.strip() == '|---':  # Skip separator line
+                continue
+            parts = [part.strip() for part in line.split('|')[1:-1]]  # Extract columns
+            if len(parts) == 4:
+                table_rows += f"""
+                    <tr style='border: 1px solid #ddd; background-color: #f9f9f9;'>
+                        <td style='padding: 8px;'>{parts[0]}</td>
+                        <td style='padding: 8px;'>{parts[1]}</td>
+                        <td style='padding: 8px;'>{parts[2]}</td>
+                        <td style='padding: 8px;'>{parts[3]}</td>
+                    </tr>
+                """
+
+    # Handle greetings
+    if user_message.lower().startswith(("hello", "hi", "sala", "assalam")):
+        response = """
+        <p style='font-style: italic;'>As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
+        """
+        return response
+
+    response = f"""
+    <h3 style='color: #333;'>Unani Ingredients for {user_message.capitalize()}</h3>
+    <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+        <thead>
+            <tr style='background-color: #f2f2f2;'>
+                <th style='border: 1px solid #ddd; padding: 8px;'>Ingredient</th>
+                <th style='border: 1px solid #ddd; padding: 8px;'>Dosage</th>
+                <th style='border: 1px solid #ddd; padding: 8px;'>Benefits</th>
+                <th style='border: 1px solid #ddd; padding: 8px;'>Precautions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {table_rows}
+        </tbody>
+    </table>
+    <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
+    """
+    return response
+
 # Home Page
 def index(request):
     """
@@ -427,11 +469,12 @@ def login(request):
 # Remove Markdown Formatting
 def remove_markdown_formatting(text):
     """
-    Removes any markdown-style formatting (e.g., **bold** or *italic*) from the response text.
+    Removes Markdown formatting like **bold**, *italic*, and bullet points from text.
     """
-    text = re.sub(r'(\*\*|\*|__|_)(.*?)\1', r'\2', text)  # Removes **bold** or *italic*
-    text = re.sub(r'\n\s*\*\s*(.*)', r'\1', text)  # Removes bullet points (list formatting)
-    return text.strip()
+    text = re.sub(r'(\*\*|\*|__|_)(.*?)\1', r'\2', text)
+    text = re.sub(r'^\s*[\*\-]\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\n\s*\n', '\n', text).strip()
+    return text
 
 # Fetch Conversation History
 def get_conversation_history(user_id):
