@@ -262,8 +262,6 @@ def get_unani_ingredients(disease):
     conn.close()
     return ingredients
 
-# Generate Chatbot Response
-# Generate Chatbot Response
 def generate_chat_response(user_message):
     """
     Checks Unani medicine database first, then suggests ingredients if disease is not found.
@@ -272,36 +270,68 @@ def generate_chat_response(user_message):
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
-            response = f"**Unani Treatment for {word.capitalize()}**\n"
-            response += f"🔹 **Symptoms:** {', '.join(data['symptoms'])}\n"
-            response += f"🩺 **Treatment:** {', '.join(data['treatment'])}\n"
+            response = f"<h3>Unani Treatment for {word.capitalize()}</h3>"
+            response += f"<p><strong>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
+            response += f"<p><strong>Treatment:</strong> {', '.join(data['treatment'])}</p>"
 
             if "medicine" in data and data["medicine"]:
-                response += "\n🛒 **Recommended Medicines:**\n"
+                response += "<h4>Recommended Medicines:</h4>"
                 for med in data["medicine"]:
-                    response += f"🔹 [{med['name']}]({med['link']})\n"
-
+                    response += f"<p><a href='{med['link']}'>{med['name']}</a></p>"
             return response
 
     # If no disease is found in database, suggest Unani ingredients
     ingredients = get_unani_ingredients(user_message.lower())
     if ingredients:
-        response = f"**Unani Ingredients for {user_message.capitalize()}**\n"
+        # Start building the HTML table rows
+        table_rows = ""
         for ingredient in ingredients:
-            response += f"🔹 **{ingredient[0]}**\n"
-            response += f"   - **Benefits:** {ingredient[1]}\n"
-            response += f"   - **Usage:** {ingredient[2]}\n"
+            table_rows += f"""
+                <tr>
+                    <td>{ingredient[0]}</td>
+                    <td>{ingredient[2]}</td>
+                    <td>{ingredient[1]}</td>
+                    <td>{ingredient[3] if len(ingredient) > 3 else 'N/A'}</td>
+                </tr>
+            """
+        
+        # Combine the HTML template with dynamic data
+        response = f"""
+        <h3>Unani Ingredients for {user_message.capitalize()}</h3>
+        <table id="ingredients-table">
+            <thead>
+                <tr>
+                    <th>Ingredient</th>
+                    <th>Dosage</th>
+                    <th>Benefits</th>
+                    <th>Cautions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {table_rows}
+            </tbody>
+        </table>
+        """
         return response
     else:
         # If no ingredients are found, use Gemini AI
         prompt = f"""
-        You are an expert in Unani medicine. Answer based on Unani principles. When the user starts the conversation with greetings, respond with: 
-        "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
+            You are an expert in Unani medicine. Answer based on Unani principles. When the user starts the conversation with greetings, respond with: 
+            "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
 
-        The user is asking about the disease except the greetings: {user_message}. Since this disease is not in our database, please suggest natural Unani ingredients or remedies to manage or treat this condition. Provide detailed information about the ingredients, their benefits, and how to use them. Ensure the response is clear, concise, and based on Unani principles.
+            The user is asking about the disease except the greetings: {user_message}. Since this disease is not in our database, please suggest only prophetic Unani ingredients or remedies to manage or treat this condition. Provide detailed information about the ingredients, their benefits, and how to use them. Ensure the response is clear, concise, and based on prophetic Unani principles. Provide the ingredients, dosages, and benefits in the following **structured table format**:
 
-        Bot:
-        """
+            | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
+            |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
+            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
+            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
+            | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
+
+            At the end, write "Indeed, the cure is Allah's will."
+
+            Bot:
+            """
+
         response = model.generate_content(prompt)
         return response.text
 # Home Page

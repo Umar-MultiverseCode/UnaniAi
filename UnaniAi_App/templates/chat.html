@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,14 +8,27 @@
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     <link rel="stylesheet" href="{% static 'css/history.css' %}">
     <link rel="stylesheet" href="{% static 'css/logout.css' %}">
-    
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Include Three.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
-    
     <style>
+        /* Add this CSS for the table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+
         /* Add this CSS for the sidebar */
         .sidebar {
             position: fixed;
@@ -128,7 +140,6 @@
             text-align: center;
             margin: 0;
         }
-        
 
         .body-part-images img:hover {
             transform: scale(1.1);
@@ -208,7 +219,7 @@
             align-items: center;
             z-index: 1003; /* Ensure it's above other elements */
         }
-        
+
         .modal-content {
             background: #ffffff; /* White background */
             padding: 25px;
@@ -218,7 +229,7 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
             animation: fadeIn 0.3s ease; /* Smooth fade-in animation */
         }
-        
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -227,13 +238,13 @@
             border-bottom: 1px solid #e0e0e0; /* Light border for separation */
             padding-bottom: 10px;
         }
-        
+
         .modal-header h2 {
             margin: 0;
             font-size: 24px; /* Larger font size for heading */
             color: #333; /* Darker text for better readability */
         }
-        
+
         .modal-header button {
             background: none;
             border: none;
@@ -242,23 +253,23 @@
             color: #666; /* Grey color for close button */
             transition: color 0.2s ease; /* Smooth color transition */
         }
-        
+
         .modal-header button:hover {
             color: #333; /* Darker on hover */
         }
-        
+
         .modal-body {
             margin-bottom: 20px;
             font-size: 16px; /* Comfortable font size */
             color: #555; /* Slightly lighter text for body */
         }
-        
+
         .modal-footer {
             text-align: right;
             border-top: 1px solid #e0e0e0; /* Light border for separation */
             padding-top: 15px;
         }
-        
+
         /* Fade-in animation for modal */
         @keyframes fadeIn {
             from {
@@ -347,11 +358,7 @@
             <div class="chat-input-container glass">
                 <form class="chat-form" action="{% url 'chat_view' %}" method="POST">
                     {% csrf_token %}
-                    <textarea 
-                        class="chat-input" 
-                        placeholder="Message UnaniAI..."
-                        rows="1"
-                    ></textarea>
+                    <textarea class="chat-input" placeholder="Message UnaniAI..." rows="1"></textarea>
                     <button type="submit" class="send-button">
                         <span>Send</span>
                         <div class="button-glow"></div>
@@ -759,6 +766,7 @@
                 alert("Geolocation is not supported by your browser.");
             }
         }
+
         // Load and render the 3D model
         // Load and render the image
         function loadImage() {
@@ -779,7 +787,7 @@
 
             // Create a texture loader
             const textureLoader = new THREE.TextureLoader();
-            const imageUrl = "{% static 'C:/Users/pc/Desktop/unani/UnaniAi/UnaniAi_App/static/images/5545023.jpg' %}"; // Replace with your image path
+            const imageUrl = "{% static 'images/5545023.jpg' %}"; // Replace with your image path
 
             // Load the image as a texture
             textureLoader.load(imageUrl, function (texture) {
