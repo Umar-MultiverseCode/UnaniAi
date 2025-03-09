@@ -268,11 +268,11 @@ def generate_chat_response(user_message):
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
-            response = f"<h3 style='color: #333;'>Unani Treatment for {word.capitalize()}</h3>"
-            response += f"<p><strong>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
-            response += f"<p><strong>Treatment:</strong> {', '.join(data['treatment'])}</p>"
+            response = f"<h3 style='color: white; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 10px;'>Unani Treatment for {word.capitalize()}</h3>"
+            response += f"<p style='color: white; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
+            response += f"<p style='color: white; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>"           
             if "medicine" in data and data["medicine"]:
-                response += "<h4>Recommended Medicines:</h4>"
+                response += "<h4 style='color: #ffcc00; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'>Recommended Medicines:</h4>"
                 for med in data["medicine"]:
                     response += f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>"
             return response
@@ -283,39 +283,40 @@ def generate_chat_response(user_message):
         table_rows = ""
         for ingredient in ingredients:
             table_rows += f"""
-                <tr style='border: 1px solid #ddd; background-color: #f9f9f9;'>
-                    <td style='padding: 8px;'>{ingredient[0]}</td>
-                    <td style='padding: 8px;'>{ingredient[2]}</td>
-                    <td style='padding: 8px;'>{ingredient[1]}</td>
-                    <td style='padding: 8px;'>N/A</td>
-                </tr>
+               <tr style='border: 1px solid #ddd; background-color: white;'>
+                        <td style='padding: 8px;'>{parts[0]}</td>
+                        <td style='padding: 8px;'>{parts[1]}</td>
+                        <td style='padding: 8px;'>{parts[2]}</td>
+                        <td style='padding: 8px;'>{parts[3]}</td>
+                    </tr>
             """
         response = f"""
-        <h3 style='color: #333;'>Unani Ingredients for {user_message.capitalize()}</h3>
+        <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
         <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-            <thead>
-                <tr style='background-color: #f2f2f2;'>
-                    <th style='border: 1px solid #ddd; padding: 8px;'>Ingredient</th>
-                    <th style='border: 1px solid #ddd; padding: 8px;'>Dosage</th>
-                    <th style='border: 1px solid #ddd; padding: 8px;'>Benefits</th>
-                    <th style='border: 1px solid #ddd; padding: 8px;'>Precautions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {table_rows}
-            </tbody>
+        <thead>
+            <tr style='background-color: white;'>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
+            </tr>
+        </thead>
+        <tbody style='color: black;'>
+        {table_rows}
+        </tbody>
         </table>
+        <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
         """
         return response
 
     # Fallback to Gemini API
     prompt = f"""
-    You are an expert in Unani medicine. Answer based on Unani principles. 
+    You are an expert in Unani medicine. Answer based on only prophetic Unani principles. 
     When the user starts the conversation with greetings, respond with: 
     "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
     
     The user is asking about: {user_message}. Since this disease is not in our database, 
-    suggest only prophetic Unani ingredients or remedies to manage or treat this condition. 
+    suggest only prophetic Unani ingredients or remedies to manage or treat this condition.and explain these ingredeints according to islamic view in one paragraph. 
     Provide the response in this exact table format:
 
     | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
@@ -342,7 +343,7 @@ def generate_chat_response(user_message):
             parts = [part.strip() for part in line.split('|')[1:-1]]  # Extract columns
             if len(parts) == 4:
                 table_rows += f"""
-                    <tr style='border: 1px solid #ddd; background-color: #f9f9f9;'>
+                    <tr style='border: 1px solid #ddd; background-color: white;'>
                         <td style='padding: 8px;'>{parts[0]}</td>
                         <td style='padding: 8px;'>{parts[1]}</td>
                         <td style='padding: 8px;'>{parts[2]}</td>
@@ -358,23 +359,24 @@ def generate_chat_response(user_message):
         return response
 
     response = f"""
-    <h3 style='color: #333;'>Unani Ingredients for {user_message.capitalize()}</h3>
-    <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-        <thead>
-            <tr style='background-color: #f2f2f2;'>
-                <th style='border: 1px solid #ddd; padding: 8px;'>Ingredient</th>
-                <th style='border: 1px solid #ddd; padding: 8px;'>Dosage</th>
-                <th style='border: 1px solid #ddd; padding: 8px;'>Benefits</th>
-                <th style='border: 1px solid #ddd; padding: 8px;'>Precautions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {table_rows}
-        </tbody>
-    </table>
+    <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
+   <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+    <thead>
+        <tr style='background-color: white;'>
+            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
+            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
+            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
+            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
+        </tr>
+    </thead>
+    <tbody style='color: black;'>
+    {table_rows}
+    </tbody>
+</table>
     <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
     """
     return response
+
 
 # Home Page
 def index(request):
