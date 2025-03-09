@@ -6,24 +6,22 @@ import json
 import google.generativeai as genai
 from django.contrib import messages
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from datetime import datetime
-import json
-import requests  # Google Places API ke liye
+import requests
 
 # Gemini API Setup
 genai.configure(api_key="AIzaSyCnLkFs3-8aufez4jPpQFnahj4ropCNBfg")
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Google Places API Key
-GOOGLE_PLACES_API_KEY = "YOUR_GOOGLE_PLACES_API_KEY"  # Apna API key daalein
+GOOGLE_PLACES_API_KEY = "YOUR_GOOGLE_PLACES_API_KEY"  # Replace with your API key
 
 # SQLite Database Setup
 def create_database():
     """
-    SQLite database aur tables create karta hai (if not exists).
+    Creates SQLite database and tables if they don't exist.
     """
     conn = sqlite3.connect('signup.db')
     cursor = conn.cursor()
@@ -77,12 +75,12 @@ def create_database():
 
     conn.commit()
     conn.close()
-    print("Database and tables created successfully!")  # Debugging ke liye
+    print("Database and tables created successfully!")
 create_database()
 
 # Temporary Unani Medicine Database
 unani_medicines = {
-    "cough": {
+   "cough": {
         "symptoms": ["Dry throat", "Chest congestion", "Difficulty breathing"],
         "treatment": ["Take honey with ginger", "Drink liquorice root tea"],
         "medicine": [
@@ -260,9 +258,10 @@ def get_unani_ingredients(disease):
     conn.close()
     return ingredients
 
+# Generate Chat Response
 def generate_chat_response(user_message):
     """
-    Generates a clean, table-formatted response for Unani medicine queries with inline CSS.
+    Generates a clean, table-formatted response for Unani medicine queries.
     """
     words = user_message.lower().split()
     for word in words:
@@ -274,11 +273,13 @@ def generate_chat_response(user_message):
             if "medicine" in data and data["medicine"]:
                 response += "<h4 style='color: #ffcc00; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'>Recommended Medicines:</h4>"
                 for med in data["medicine"]:
-                    response += f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>"
+                    response += f"<p style='color: blue; font-size: 16px;'><a href='{med['link']}' style='text-decoration: none; color: green;'>{med['name']}</a> - ₹{med['price']}</p>"
             return response
 
     # Check Unani ingredients table
     ingredients = get_unani_ingredients(user_message.lower())
+    table_rows = ""
+    explanation_paragraph = ""
     if ingredients:
         table_rows = ""
         for ingredient in ingredients:
@@ -290,6 +291,7 @@ def generate_chat_response(user_message):
                         <td style='padding: 8px;'>{parts[3]}</td>
                     </tr>
             """
+        explanation_paragraph = "<p style='font-style: italic;'>These ingredients have been used in Unani medicine for centuries. [Include specific references here based on disease]</p>"
         response = f"""
         <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
         <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
@@ -305,25 +307,94 @@ def generate_chat_response(user_message):
         {table_rows}
         </tbody>
         </table>
+        {explanation_paragraph}
         <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
         """
         return response
 
     # Fallback to Gemini API
     prompt = f"""
-    You are an expert in Unani medicine. Answer based on only prophetic Unani principles. 
-    When the user starts the conversation with greetings, respond with: 
-    "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
-    
-    The user is asking about: {user_message}. Since this disease is not in our database, 
-    suggest only prophetic Unani ingredients or remedies to manage or treat this condition.and explain these ingredeints according to islamic view in one paragraph. 
-    Provide the response in this exact table format:
+    You are an expert in Unani medicine. Answer based only on prophetic Unani principles that are also scientifically accepted worldwide. Remember, as an Islamic bot, always use decent language and respond in the same language as the user.
 
-    | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
+    When the user asks about a disease, suggest different prophetic ingredients each time based on the illness, ensuring variety instead of repeating the same ingredients. Use a pool of 40 globally recognized prophetic ingredients, and ensure each response includes unique ingredients.
+
+    When the user starts the conversation with greetings, respond with:
+    "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah (SWT) be upon you. How can I assist you today?"
+
+    The user is asking about: {user_message}. Since this disease is not in our database, suggest only properly verified prophetic Unani ingredients or remedies to manage or treat this condition. These ingredients must be:
+
+    Religiously Authentic: Supported by authentic references from the Quran or Sahih Hadith.
+
+    Scientifically Validated: Backed by modern scientific research where possible, to ensure credibility.
+
+    Globally Recognized: Mentioned in Islamic books and traditions that are accepted worldwide.
+
+    Explain these ingredients according to the Islamic view in one paragraph, and provide the response with typing effect in the exact table format below:
+   | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
     |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
     | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
 
-    At the end, write "Indeed, the cure is Allah's will."
+    Guidelines for Benefits Section:
+
+        1. Always provide proof from the Quran or Hadith in the following format:
+            For Quranic references: Allah (SWT) says in the Quran, "[Quote the exact verse]." (Surah Name, Ayat Number)
+            For Hadith references: The Prophet (ﷺ) said, "[Quote the exact Hadith]." (Hadith Source)
+        2. Ensure the references are authentic and widely accepted by Islamic scholars.
+        3. Where possible, briefly mention scientific evidence supporting the ingredient's benefits, but prioritize Islamic references.
+        4. Always write (SWT) after Allah every time.
+        5. At the end of the response, always write: "Indeed, the cure is Allah's (SWT) will."
+        6. Explanation Paragraph: Below the table, add a paragraph explaining the ingredients in detail, their Islamic significance, and how they can help with the specific condition. For example:
+
+            "The ingredients mentioned above are not only supported by Islamic teachings but also by modern science. For instance, [Ingredient 1] is mentioned in the Quran/Hadith for its healing properties, and modern research has shown that it helps with [specific benefit]. Similarly, [Ingredient 2] has been used for centuries in Unani medicine for [specific benefit], and its effectiveness is backed by scientific studies. These remedies are a testament to the wisdom of Allah (SWT) and the teachings of the Prophet (ﷺ)."
+
+    Additional Instructions:
+        1. Double-check all Quranic verses and Hadiths for accuracy. Use only Sahih (authentic) Hadiths from trusted sources like Sahih Bukhari, Sahih Muslim, etc.
+        2. Avoid speculative or weak references.
+        3. If scientific evidence is mentioned, ensure it is from credible and peer-reviewed sources.
+        4. Maintain a balanced and respectful tone, reflecting the principles of Unani medicine and Islamic teachings.
+
+        5. Use a diverse pool of 40 prophetic ingredients, such as:
+            Black Seed (Habba Sawda)
+            Honey (Asal)
+            Dates (Tamar)
+            Olive Oil (Zaitun)
+            Pomegranate (Rumman)
+            Ginger (Zanjabeel)
+            Garlic (Thoom)
+            Cumin (Kamoon)
+            Barley (Sha'ir)
+            Figs (Teen)
+            Grapes (Inab)
+            Cucumber (Qiththa)
+            Lentils (Adas)
+            Melon (Battikh)
+            Pumpkin (Yaqteen)
+            Mint (Na'na')
+            Thyme (Za'atar)
+            Chamomile (Babunaj)
+            Fenugreek (Hulba)
+            Senna (Sana Makki)
+            Turmeric (Kurkum)
+            Cinnamon (Qirfa)
+            Saffron (Za'faran)
+            Coriander (Kuzbara)
+            Basil (Rayhan)
+            Quince (Safarjal)
+            Myrobalan (Halila)
+            Frankincense (Luban)
+            Aloe Vera (Sabr)
+            Rose Water (Ma al-Ward)
+            Vinegar (Khall)
+            Milk (Laban)
+            Yogurt (Laban Zabadi)
+            Fish (Samak)
+            Eggs (Bayd)
+            Meat (Lahm)
+            Wheat (Qamh)
+            Rice (Ruzz)
+            Lentils (Adas)
+            Chickpeas (Hummus)
+    Ensure that each response includes a unique combination of ingredients from this list, avoiding repetition unless absolutely necessary.
     """
 
     gemini_response = model.generate_content(prompt).text
@@ -332,6 +403,7 @@ def generate_chat_response(user_message):
     # Parse Gemini response into a table
     lines = cleaned_response.split('\n')
     table_rows = ""
+    explanation_paragraph = ""
     in_table = False
     for line in lines:
         if line.startswith('| Ingredient'):
@@ -350,81 +422,95 @@ def generate_chat_response(user_message):
                         <td style='padding: 8px;'>{parts[3]}</td>
                     </tr>
                 """
+            elif line.strip().startswith("The ingredients mentioned above"):
+                explanation_paragraph += line.strip() + " "  # Append explanation
+
+    if not explanation_paragraph:
+        explanation_paragraph = "<p style='font-style: italic;'>These ingredients have been used in Unani medicine for centuries. They are supported by both Islamic teachings and scientific research.</p>"
+    
 
     # Handle greetings
-    if user_message.lower().startswith(("hello", "hi", "sala", "assalam")):
+    if user_message.lower().startswith(("hello", "hi", "sala",)):
         response = """
-        <p style='font-style: italic;'>As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
+        <p style='font-style: italic;'>As-salam alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
+        """
+        return response
+    
+    # Handle greetings
+    if user_message.lower().startswith(("assalamualikum", "assalam")):
+        response = """
+        <p style='font-style: italic;'>Walaykum as-salam wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
         """
         return response
 
     response = f"""
     <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
-   <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-    <thead>
-        <tr style='background-color: white;'>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
-        </tr>
-    </thead>
-    <tbody style='color: black;'>
-    {table_rows}
-    </tbody>
-</table>
+    <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
+        <thead>
+            <tr style='background-color: white;'>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
+                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
+            </tr>
+        </thead>
+        <tbody style='color: black;'>
+        {table_rows}
+        </tbody>
+    </table>
+    {explanation_paragraph}
     <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
     """
     return response
 
-
 # Home Page
 def index(request):
     """
-    Home page render karta hai.
+    Renders the home page.
     """
     return render(request, 'index.html')
 
+# Logout Functionality
 def logout(request):
     """
-    Logout functionality handle karta hai aur session clear karta hai.
+    Logs out the user and clears the session.
     """
-    request.session.flush()  # Session clear karo
-    return redirect('index')  # Home page par redirect karo
+    request.session.flush()  # Clear session
+    return redirect('index')  # Redirect to home page
 
 # Chat Page
 def chat_view(request):
     """
-    Chat page render karta hai aur user ki conversation history fetch karta hai.
+    Renders the chat page and fetches conversation history.
     """
     if 'user_id' not in request.session:
-        return redirect('login')  # Agar user login nahi hai to login page par redirect karo
+        return redirect('login')  # Redirect to login if user is not logged in
 
     user_id = request.session['user_id']
-    history = get_conversation_history(user_id)  # User ki conversation history fetch karo
+    history = get_conversation_history(user_id)  # Fetch conversation history
     return render(request, 'chat.html', {'history': history})
 
 # Signup Functionality
 def signup(request):
     """
-    Signup functionality handle karta hai.
+    Handles user signup.
     """
     if request.method == "POST":
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Database mein user ko store karo
+        # Store user in the database
         try:
             conn = sqlite3.connect('signup.db')
             cursor = conn.cursor()
 
-            # Check karo ki email pehle se exist karta hai ya nahi
+            # Check if email already exists
             cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
             if cursor.fetchone():
                 messages.error(request, 'User with this email already exists.')
                 return redirect('signup')
 
-            # Naya user add karo
+            # Add new user
             cursor.execute("INSERT INTO users (email, password) VALUES (?, ?)", (email, password))
             conn.commit()
             messages.success(request, 'Account created successfully! Please login.')
@@ -440,13 +526,13 @@ def signup(request):
 # Login Functionality
 def login(request):
     """
-    Login functionality handle karta hai aur session mein user_id store karta hai.
+    Handles user login and stores user_id in the session.
     """
     if request.method == "POST":
         email = request.POST.get('email')
         password = request.POST.get('password')
 
-        # Database se user ko verify karo
+        # Verify user from the database
         try:
             conn = sqlite3.connect('signup.db')
             cursor = conn.cursor()
@@ -456,9 +542,9 @@ def login(request):
 
             if user:
                 # User login successful
-                request.session['user_id'] = user[0]  # Session mein user_id store karo
+                request.session['user_id'] = user[0]  # Store user_id in session
                 messages.success(request, 'Welcome! You have successfully logged in.')
-                return redirect('index')  # Chat page par redirect karo
+                return redirect('index')  # Redirect to chat page
             else:
                 messages.error(request, 'Invalid email or password.')
         except sqlite3.Error as e:
@@ -505,7 +591,7 @@ def chatbot_response(request):
         try:
             data = json.loads(request.body)
             user_message = data.get("message", "")
-            user_id = request.session.get('user_id')  # Session se user_id fetch karo
+            user_id = request.session.get('user_id')  # Fetch user_id from session
 
             if not user_message:
                 return JsonResponse({"error": "No message provided"}, status=400)
@@ -525,7 +611,7 @@ def chatbot_response(request):
 
             return JsonResponse({"response": response})
         except Exception as e:
-            print(f"Error in chatbot_response: {e}")  # Debugging ke liye
+            print(f"Error in chatbot_response: {e}")  # Debugging log
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
@@ -560,10 +646,7 @@ def emergency_assistance(request):
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request method"}, status=400)
 
-# Temporary storage for medicine reminders (replace with database in production)
-# Global list to store medicine reminders
-medicine_reminders_list = []
-
+# Medicine Reminder Functionality
 @csrf_exempt
 def add_medicine_reminder(request):
     if request.method == "POST":
@@ -632,7 +715,6 @@ def medicine_reminders(request):
 def send_medicine_reminders(request):
     """
     Sends email reminders for medicine schedules to the logged-in user's email.
-    All emails are sent FROM jahirshaikh162003@gmail.com.
     """
     if request.method == "POST":
         try:
