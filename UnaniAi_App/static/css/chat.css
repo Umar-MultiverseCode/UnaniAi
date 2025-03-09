@@ -305,7 +305,11 @@ body {
 }
 
 /* ====== Utility Buttons ====== */
-.history-btn, .emergency-btn, .reminder-btn, .logout-btn, .close-sidebar-btn {
+.sidebar .history-btn, 
+.sidebar .emergency-btn, 
+.sidebar .reminder-btn, 
+.sidebar .logout-btn, 
+.sidebar .close-sidebar-btn {
     padding: 12px 20px;
     font-size: 16px;
     border: none;
@@ -316,35 +320,88 @@ body {
     color: var(--text-primary);
     margin-bottom: 10px;
     width: 100%;
+    background: var(--glass-bg); /* Base glass effect */
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s ease;
 }
 
-.history-btn {
-    background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
+/* Specific button gradients using theme variables */
+.sidebar .history-btn {
+    background: var(--primary-gradient); /* Cyan to purple */
 }
 
-.emergency-btn {
-    background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+.sidebar .emergency-btn {
+    background: linear-gradient(135deg, #f87171, var(--accent-blue)); /* Red to theme blue */
 }
 
-.reminder-btn {
-    background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+.sidebar .reminder-btn {
+    background: var(--secondary-gradient); /* Cyan to light blue */
 }
 
-.logout-btn {
-    background: linear-gradient(135deg, #e879f9 0%, #d946ef 100%);
+.sidebar .logout-btn {
+    background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); /* Purple to cyan */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.close-sidebar-btn {
-    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+.sidebar .close-sidebar-btn {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); /* Cyan to purple */
     width: 75%;
 }
 
-.history-btn:hover, .emergency-btn:hover, .reminder-btn:hover, 
-.logout-btn:hover, .close-sidebar-btn:hover {
+/* Hover effects */
+.sidebar .history-btn:hover, 
+.sidebar .emergency-btn:hover, 
+.sidebar .reminder-btn:hover, 
+.sidebar .logout-btn:hover, 
+.sidebar .close-sidebar-btn:hover {
     box-shadow: var(--neon-glow);
     transform: translateY(-2px);
 }
 
+/* Button glow effect */
+.sidebar .history-btn .btn-glow, 
+.sidebar .emergency-btn .btn-glow, 
+.sidebar .reminder-btn .btn-glow, 
+.sidebar .logout-btn .btn-glow, 
+.sidebar .close-sidebar-btn .btn-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: var(--primary-gradient);
+    opacity: 0.2;
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.5s ease-out;
+}
+
+.sidebar .logout-btn .btn-glow {
+    width: 10px;
+    height: 10px;
+    margin-left: 10px;
+    position: static;
+    background: rgba(255, 255, 255, 0.3);
+    animation: glow 1.5s infinite;
+}
+
+.sidebar .history-btn:hover .btn-glow, 
+.sidebar .emergency-btn:hover .btn-glow, 
+.sidebar .reminder-btn:hover .btn-glow, 
+.sidebar .logout-btn:hover .btn-glow, 
+.sidebar .close-sidebar-btn:hover .btn-glow {
+    transform: scale(1); /* Only for larger glow */
+}
+
+/* Glow animation from logout.css */
+@keyframes glow {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
 /* ====== History Window ====== */
 .history-window {
     position: fixed;
@@ -728,3 +785,4 @@ label {
     border: 1px solid var(--glass-border);
     border-radius: 15px;
 }
+
