@@ -260,123 +260,352 @@ def get_unani_ingredients(disease):
     conn.close()
     return ingredients
 
-def generate_chat_response(user_message):
-    """
-    Generates a clean, table-formatted response for Unani medicine queries with inline CSS.
-    """
-    words = user_message.lower().split()
-    for word in words:
-        if word in unani_medicines:
-            data = unani_medicines[word]
-            response = f"<h3 style='color: white; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 10px;'>Unani Treatment for {word.capitalize()}</h3>"
-            response += f"<p style='color: white; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
-            response += f"<p style='color: white; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>"           
-            if "medicine" in data and data["medicine"]:
-                response += "<h4 style='color: #ffcc00; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 8px;'>Recommended Medicines:</h4>"
-                for med in data["medicine"]:
-                    response += f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>"
-            return response
+# UnaniAI Class for Chatbot Logic
+class UnaniAI:
+    def __init__(self):
+        self.conversation_history = []
+        self.language = "mixed"  # Default: Hindi-English mix
 
-    # Check Unani ingredients table
-    ingredients = get_unani_ingredients(user_message.lower())
-    if ingredients:
-        table_rows = ""
-        for ingredient in ingredients:
-            table_rows += f"""
-               <tr style='border: 1px solid #ddd; background-color: white;'>
-                        <td style='padding: 8px;'>{parts[0]}</td>
-                        <td style='padding: 8px;'>{parts[1]}</td>
-                        <td style='padding: 8px;'>{parts[2]}</td>
-                        <td style='padding: 8px;'>{parts[3]}</td>
-                    </tr>
+    def generate_chat_response(self, user_message):
+        user_message_lower = user_message.lower().strip()
+        words = user_message_lower.split()
+        self.conversation_history.append(user_message)
+
+        # Language Switch (Priority over everything)
+        if "talk in english" in user_message_lower:
+            self.language = "english"
+            return """
+            <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Alright, bro! I'll stick to English from now on. How can I help you today?</p>
             """
-        response = f"""
-        <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
-        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-        <thead>
-            <tr style='background-color: white;'>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
-            </tr>
-        </thead>
-        <tbody style='color: black;'>
-        {table_rows}
-        </tbody>
-        </table>
-        <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
-        """
-        return response
+        elif "hindi mein baat kar" in user_message_lower:
+            self.language = "hindi"
+            return """
+            <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Theek hai, bhai! Ab Hindi mein baat karunga. Kya baat hai?</p>
+            """
 
-    # Fallback to Gemini API
-    prompt = f"""
-    You are an expert in Unani medicine. Answer based on only prophetic Unani principles. 
-    When the user starts the conversation with greetings, respond with: 
-    "As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?"
-    
-    The user is asking about: {user_message}. Since this disease is not in our database, 
-    suggest only prophetic Unani ingredients or remedies to manage or treat this condition.and explain these ingredeints according to islamic view in one paragraph. 
-    Provide the response in this exact table format:
-
-    | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
-    |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
-    | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
-
-    At the end, write "Indeed, the cure is Allah's will."
-    """
-
-    gemini_response = model.generate_content(prompt).text
-    cleaned_response = remove_markdown_formatting(gemini_response)
-
-    # Parse Gemini response into a table
-    lines = cleaned_response.split('\n')
-    table_rows = ""
-    in_table = False
-    for line in lines:
-        if line.startswith('| Ingredient'):
-            in_table = True  # Table header detected
-            continue
-        if in_table and line.startswith('|'):
-            if line.strip() == '|---':  # Skip separator line
-                continue
-            parts = [part.strip() for part in line.split('|')[1:-1]]  # Extract columns
-            if len(parts) == 4:
-                table_rows += f"""
-                    <tr style='border: 1px solid #ddd; background-color: white;'>
-                        <td style='padding: 8px;'>{parts[0]}</td>
-                        <td style='padding: 8px;'>{parts[1]}</td>
-                        <td style='padding: 8px;'>{parts[2]}</td>
-                        <td style='padding: 8px;'>{parts[3]}</td>
-                    </tr>
+        # Greeting Handling
+        greetings = ["hello", "hi", "sala", "assalam", "as-salam", "salaam"]
+        if any(user_message_lower.startswith(greet) for greet in greetings):
+            if self.language == "english":
+                return """
+                <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>As-salamu alaykum, bro! Thanks for reaching out. How can I assist you?</p>
+                """
+            else:
+                return """
+                <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>As-salamu alaykum, bhai! Shukran for reaching out. Kya baat hai, kaise madad karoon?</p>
                 """
 
-    # Handle greetings
-    if user_message.lower().startswith(("hello", "hi", "sala", "assalam")):
-        response = """
-        <p style='font-style: italic;'>As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
-        """
-        return response
+        # Personal Queries
+        if "aap kon" in user_message_lower or "who are you" in user_message_lower:
+            if self.language == "english":
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>I’m UnaniAI, bro—your guide to prophetic Unani wisdom. Here to help with natural healing. What’s up?</p>
+                """
+            else:
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, main UnaniAI hoon—tera prophetic Unani wisdom wala dost. Natural tareekon se sehat theek karta hoon. Tu bol, kya chahiye?</p>
+                """
+        elif "apka naam kya" in user_message_lower:
+            if self.language == "english":
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>My name’s UnaniAI, bro! Your buddy for Unani remedies. What’s going on?</p>
+                """
+            else:
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Naam hai UnaniAI, bhai! Tera Unani ilaaj ka saathi hoon. Kya chal raha hai tere saath?</p>
+                """
+        elif "who made you" in user_message_lower or "tujhe kisne develop kiya" in user_message_lower or "tujhe kisne banaya" in user_message_lower:
+            if self.language == "english":
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>I was made by the xAI team, bro. They mixed AI with Unani knowledge to create me. What’s on your mind?</p>
+                """
+            else:
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Mujhe xAI ke logon ne banaya, bhai. Unani knowledge ke saath AI mix karke tera bhai taiyar hua. Ab bol, kya problem hai?</p>
+                """
 
-    response = f"""
-    <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
-   <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-    <thead>
-        <tr style='background-color: white;'>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
-            <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
-        </tr>
-    </thead>
-    <tbody style='color: black;'>
-    {table_rows}
-    </tbody>
-</table>
-    <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
-    """
-    return response
+        # Casual Talk with Context
+        casual_phrases = ["kuch nahi", "sab mast", "kya haal", "what’s up", "chill marao"]
+        if any(phrase in user_message_lower for phrase in casual_phrases):
+            last_medical = None
+            for past_msg in reversed(self.conversation_history[:-1]):
+                for word in past_msg.lower().split():
+                    if word in unani_medicines:
+                        last_medical = word
+                        break
+                if last_medical:
+                    break
+            if last_medical:
+                if self.language == "english":
+                    return f"""
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Cool, bro! You said you had {last_medical} earlier—everything okay now, or you just chilling?</p>
+                    """
+                else:
+                    return f"""
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Mast hai, bhai! Tune bola tha {last_medical} hai—ab sab theek hai ya bas aise hi chill karna hai?</p>
+                    """
+            else:
+                if self.language == "english":
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Alright, bro! Good to know everything’s fine. Anything you want to talk about?</p>
+                    """
+                else:
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Haan bhai, sab mast hai toh shukar! Koi baat karna hai ya aise hi chill karna hai?</p>
+                    """
 
+        # Medical Query Handling
+        medical_keywords = ["fever", "cough", "pain", "problem", "joint", "sex", "cold", "headache", "stamina", "energy"]
+        is_medical = any(keyword in user_message_lower for keyword in medical_keywords)
+        context_diseases = [word for word in words if word in unani_medicines]
+
+        if is_medical:
+            # Table Request
+            if "table" in user_message_lower or "ingredient" in user_message_lower:
+                diseases = context_diseases if context_diseases else [word for past_msg in self.conversation_history[:-1] for word in past_msg.lower().split() if word in unani_medicines]
+                if diseases:
+                    table_rows = ""
+                    for disease in diseases[:3]:  # Limit to 3 conditions
+                        if disease in unani_medicines:
+                            ingredients = unani_medicines[disease].get("ingredients", [
+                                {"name": "Generic", "dosage": "As advised", "benefits": "Supports healing", "precautions": "Consult a healer"}
+                            ])
+                            for ing in ingredients:
+                                table_rows += f"""
+                                    <tr style='border: 1px solid #ddd; background-color: #ffffff;'>
+                                        <td style='padding: 10px; color: #333;'>{ing['name']} ({disease.capitalize()})</td>
+                                        <td style='padding: 10px; color: #333;'>{ing['dosage']}</td>
+                                        <td style='padding: 10px; color: #333;'>{ing['benefits']}</td>
+                                        <td style='padding: 10px; color: #333;'>{ing['precautions']}</td>
+                                    </tr>
+                                """
+                    if table_rows:
+                        if self.language == "english":
+                            return f"""
+                            <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>Ingredients for Your Conditions</h3>
+                            <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Here’s the table with ingredients for {', '.join(diseases)}, bro:</p>
+                            <table style='width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;'>
+                                <thead>
+                                    <tr style='background-color: #f2f2f2;'>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Ingredient</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Dosage</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Benefits</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Precautions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {table_rows}
+                                </tbody>
+                            </table>
+                            <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'>Indeed, the cure is Allah's will.</p>
+                            """
+                        else:
+                            return f"""
+                            <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>{', '.join(diseases)} ke liye Ingredients</h3>
+                            <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Yeh lo bhai, {', '.join(diseases)} ke liye ingredients table mein:</p>
+                            <table style='width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;'>
+                                <thead>
+                                    <tr style='background-color: #f2f2f2;'>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Ingredient</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Dosage</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Benefits</th>
+                                        <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Precautions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {table_rows}
+                                </tbody>
+                            </table>
+                            <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'>Indeed, the cure is Allah's will.</p>
+                            """
+                else:
+                    if self.language == "english":
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, I need some clarity—which conditions do you want the table for? Tell me more!</p>
+                        """
+                    else:
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, thodi si detail aur de—kaunsi bimari ke liye table chahiye? Bata na!</p>
+                        """
+
+            # Standard Medical Response (Prioritize current message)
+            if context_diseases:
+                disease = context_diseases[0]  # Pick first detected disease from current message
+                data = unani_medicines[disease]
+                if self.language == "english":
+                    response = f"""
+                    <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>Unani Treatment for {disease.capitalize()}</h3>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Here’s the treatment for {disease}, bro:</p>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 10px;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 10px;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>
+                    """
+                else:
+                    response = f"""
+                    <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>Unani Treatment for {disease.capitalize()}</h3>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, {disease} ke liye yeh raha ilaaj:</p>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 10px;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px; margin-bottom: 10px;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>
+                    """
+                if "medicine" in data and data["medicine"]:
+                    response += "<h4 style='color: #ffcc00; font-family: Arial, sans-serif; font-size: 18px; margin-bottom: 10px;'>Recommended Medicines:</h4>"
+                    for med in data["medicine"]:
+                        response += f"<p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'><a href='{med['link']}' style='color: #00ccff; text-decoration: none;'>{med['name']}</a> - ₹{med['price']}</p>"
+                return response
+
+            # Sensitive Topics (Sex Issues)
+            if "sex" in user_message_lower or "stamina" in user_message_lower or "energy" in user_message_lower:
+                if any("detail" in past.lower() or "issue" in past.lower() for past in self.conversation_history[:-1]):
+                    if self.language == "english":
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Got it, bro! You’re facing stamina issues during sex. Here’s some Unani help based on prophetic wisdom:</p>
+                        <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>Unani Boost for Stamina</h3>
+                        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;'>
+                            <thead>
+                                <tr style='background-color: #f2f2f2;'>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Ingredient</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Dosage</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Benefits</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Precautions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style='border: 1px solid #ddd; background-color: #ffffff;'>
+                                    <td style='padding: 10px; color: #333;'>Dates (Ajwa)</td>
+                                    <td style='padding: 10px; color: #333;'>3-7 daily</td>
+                                    <td style='padding: 10px; color: #333;'>Boosts energy, strengthens body</td>
+                                    <td style='padding: 10px; color: #333;'>Avoid if diabetic</td>
+                                </tr>
+                                <tr style='border: 1px solid #ddd; background-color: #ffffff;'>
+                                    <td style='padding: 10px; color: #333;'>Honey</td>
+                                    <td style='padding: 10px; color: #333;'>1-2 tbsp daily</td>
+                                    <td style='padding: 10px; color: #333;'>Natural stamina enhancer</td>
+                                    <td style='padding: 10px; color: #333;'>Moderation needed</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'>Indeed, the cure is Allah's will.</p>
+                        """
+                    else:
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Samajh gaya, bhai! Sex ke waqt stamina kam ho raha hai. Unani mein iske liye natural ilaaj hai:</p>
+                        <h3 style='color: #ffffff; font-family: Arial, sans-serif; font-size: 24px; margin-bottom: 15px;'>Unani Boost for Stamina</h3>
+                        <table style='width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;'>
+                            <thead>
+                                <tr style='background-color: #f2f2f2;'>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Ingredient</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Dosage</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Benefits</th>
+                                    <th style='border: 1px solid #000000; padding: 10px; color: #333;'>Precautions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style='border: 1px solid #ddd; background-color: #ffffff;'>
+                                    <td style='padding: 10px; color: #333;'>Dates (Ajwa)</td>
+                                    <td style='padding: 10px; color: #333;'>3-7 daily</td>
+                                    <td style='padding: 10px; color: #333;'>Boosts energy, strengthens body</td>
+                                    <td style='padding: 10px; color: #333;'>Avoid if diabetic</td>
+                                </tr>
+                                <tr style='border: 1px solid #ddd; background-color: #ffffff;'>
+                                    <td style='padding: 10px; color: #333;'>Honey</td>
+                                    <td style='padding: 10px; color: #333;'>1-2 tbsp daily</td>
+                                    <td style='padding: 10px; color: #333;'>Natural stamina enhancer</td>
+                                    <td style='padding: 10px; color: #333;'>Moderation needed</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style='font-style: italic; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px;'>Indeed, the cure is Allah's will.</p>
+                        """
+                else:
+                    if self.language == "english":
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Alright, bro! Sex issues can be sensitive—can you tell me a bit more? Like is it energy, stamina, or something else?</p>
+                        """
+                    else:
+                        return """
+                        <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, sex ki dikkat hai—samajh gaya. Thodi detail de sakta hai? Energy kam lagti hai ya stamina ka masla hai?</p>
+                        """
+
+        # Fallback with Better Context Handling
+        if "sun" in user_message_lower or "listen" in user_message_lower or "baat" in user_message_lower:
+            last_medical = None
+            for past_msg in reversed(self.conversation_history[:-1]):
+                for word in past_msg.lower().split():
+                    if word in unani_medicines:
+                        last_medical = word
+                        break
+                if last_medical:
+                    break
+            if last_medical:
+                if self.language == "english":
+                    return f"""
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, I’m listening! You mentioned {last_medical} before—still about that, or something else? Tell me!</p>
+                    """
+                else:
+                    return f"""
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, sun raha hoon! Tune {last_medical} ka zikr kiya tha—usi ke baare mein baat karna hai ya kuch aur? Bol na!</p>
+                    """
+            else:
+                if self.language == "english":
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, I’m all ears! What’s on your mind? Tell me more!</p>
+                    """
+                else:
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, main sun raha hoon! Kya baat hai, thodi detail de na!</p>
+                    """
+
+        # Gemini API Fallback for Out-of-Context but Relevant Questions
+        relevant_keywords = ["unani", "medicine", "health", "treatment", "ai", "develop", "banaya", "kisne", "natural", "cure"]
+        if any(keyword in user_message_lower for keyword in relevant_keywords) and not context_diseases and not is_medical:
+            try:
+                # Prompt for Gemini to keep tone and domain consistent
+                prompt = f"""
+                You are UnaniAI, a friendly AI built by xAI to assist with Unani medicine and natural healing. Respond to the user in a casual, 'bhai'-style tone. Keep it relevant to Unani, health, or AI development. Use {self.language} language. Here's the user message: "{user_message}". Previous conversation: {self.conversation_history[-2:] if len(self.conversation_history) > 1 else "None"}.
+                Format your response in HTML like this:
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>[Your response]</p>
+                """
+                gemini_response = model.generate_content(prompt).text
+                return gemini_response
+            except Exception as e:
+                if self.language == "english":
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, something went wrong with my brain! Let me fix it—try asking again.</p>
+                    """
+                else:
+                    return """
+                    <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, mera dimaag thodi gadbad kar raha hai! Dobara pooch na, main theek kar dunga.</p>
+                    """
+
+        # Generic Fallback
+        last_medical = None
+        for past_msg in reversed(self.conversation_history[:-1]):
+            for word in past_msg.lower().split():
+                if word in unani_medicines:
+                    last_medical = word
+                    break
+            if last_medical:
+                break
+        if last_medical:
+            if self.language == "english":
+                return f"""
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, I’m not sure what you mean. You mentioned {last_medical} earlier—still about that, or something new?</p>
+                """
+            else:
+                return f"""
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, yeh samajh nahi aaya. Tune {last_medical} ka zikr kiya tha—usi ke baare mein hai ya kuch aur?</p>
+                """
+        else:
+            if self.language == "english":
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bro, I’m a bit lost here. Can you give me more details so I can help you out?</p>
+                """
+            else:
+                return """
+                <p style='color: #ffffff; font-family: Arial, sans-serif; font-size: 16px;'>Bhai, yeh thoda confuse kar raha hai. Thodi aur detail de na taaki main sahi se madad kar sakoon?</p>
+                """
+
+# Global UnaniAI instance
+unani_ai = UnaniAI()
 
 # Home Page
 def index(request):
@@ -510,8 +739,8 @@ def chatbot_response(request):
             if not user_message:
                 return JsonResponse({"error": "No message provided"}, status=400)
 
-            # Generate chatbot response
-            response = generate_chat_response(user_message)
+            # Generate chatbot response using UnaniAI instance
+            response = unani_ai.generate_chat_response(user_message)
 
             # Store conversation in database
             conn = sqlite3.connect('signup.db')
