@@ -544,7 +544,7 @@ def login(request):
                 # User login successful
                 request.session['user_id'] = user[0]  # Store user_id in session
                 messages.success(request, 'Welcome! You have successfully logged in.')
-                return redirect('index')  # Redirect to chat page
+                return redirect('chat_view')  # Redirect to chat page
             else:
                 messages.error(request, 'Invalid email or password.')
         except sqlite3.Error as e:
