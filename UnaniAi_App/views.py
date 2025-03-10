@@ -291,7 +291,7 @@ def generate_chat_response(user_message):
                         <td style='padding: 8px;'>{parts[3]}</td>
                     </tr>
             """
-        explanation_paragraph = "<p style='font-style: italic;'>These ingredients have been used in Unani medicine for centuries. [Include specific references here based on disease]</p>"
+        explanation_paragraph = "<p style='font-style: italic;'>The ingredients have been used in Unani medicine for centuries. [Include specific references here based on disease]</p>"
         response = f"""
         <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
         <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
@@ -426,7 +426,7 @@ def generate_chat_response(user_message):
                 explanation_paragraph += line.strip() + " "  # Append explanation
 
     if not explanation_paragraph:
-        explanation_paragraph = "<p style='font-style: italic;'>These ingredients have been used in Unani medicine for centuries. They are supported by both Islamic teachings and scientific research.</p>"
+        explanation_paragraph = "<p style='font-style: italic;'>The ingredients have been used in Unani medicine for centuries. They are supported by both Islamic teachings and scientific research.</p>"
     
 
     # Handle greetings

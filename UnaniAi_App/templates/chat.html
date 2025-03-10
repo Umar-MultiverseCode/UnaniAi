@@ -281,6 +281,96 @@
                 transform: translateY(0);
             }
         }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .chat-main {
+                flex-direction: column; /* Stack elements vertically on smaller screens */
+            }
+
+            .chat-header {
+                flex-direction: column; /* Stack header elements */
+                align-items: flex-start; /* Align items to the start */
+            }
+
+            .model-selector {
+                margin-top: 10px; /* Add some space between elements */
+            }
+
+            .chat-input-container {
+                flex-direction: column; /* Stack input elements */
+            }
+
+            .chat-input {
+                width: 100%; /* Full width for input */
+                margin-bottom: 10px; /* Space between input and button */
+            }
+
+            .send-button {
+                width: 100%; /* Full width for button */
+            }
+
+            .sidebar {
+                width: 100%; /* Full width for sidebar */
+                left: -100%; /* Hide sidebar off-screen */
+            }
+
+            .sidebar.open {
+                left: 0; /* Show sidebar */
+            }
+
+            .body-part-images img {
+                width: 100px; /* Smaller images for mobile */
+                height: 100px; /* Maintain aspect ratio */
+            }
+
+            .modal-content {
+                width: 90%; /* Responsive modal width */
+            }
+
+            .modal-header h2 {
+                font-size: 20px; /* Smaller font size for mobile */
+            }
+
+            .modal-body {
+                font-size: 14px; /* Smaller font size for mobile */
+            }
+
+            .modal-footer button {
+                font-size: 14px; /* Smaller button font size */
+            }
+
+            .history-btn, .emergency-btn, .reminder-btn, .logout-btn {
+                width: 100%; /* Full width for buttons */
+                margin-bottom: 10px; /* Space between buttons */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chat-header {
+                font-size: 16px; /* Smaller font size for mobile */
+            }
+
+            .message-content {
+                font-size: 14px; /* Smaller message font size */
+            }
+
+            .message-header {
+                font-size: 12px; /* Smaller header font size */
+            }
+
+            .modal-header h2 {
+                font-size: 18px; /* Smaller modal header font size */
+            }
+
+            .modal-body {
+                font-size: 12px; /* Smaller modal body font size */
+            }
+
+            .modal-footer button {
+                font-size: 12px; /* Smaller button font size */
+            }
+        }
     </style>
 </head>
 <body>
@@ -795,7 +885,7 @@
                 const imageMesh = new THREE.Mesh(geometry, material);
 
                 // Set the image position
-                imageMesh.position.set(-20, 0, 0);
+                imageMesh.position.set(0, 0, 0);
                 scene.add(imageMesh);
 
                 // Adjust camera position
@@ -842,7 +932,7 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const data = {
-                medicine_name: formData.get("medicine_name"),
+                medicine_name: formData .get("medicine_name"),
                 dosage: formData.get("dosage"),
                 schedule: formData.get("schedule"),
                 start_date: formData.get("start_date"),
@@ -871,4 +961,3 @@
     </script>
 </body>
 </html>
-// changes up to date
