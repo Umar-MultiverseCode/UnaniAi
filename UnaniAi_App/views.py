@@ -12,8 +12,8 @@ from datetime import datetime
 import requests
 
 # Gemini API Setup
-genai.configure(api_key="AIzaSyCnLkFs3-8aufez4jPpQFnahj4ropCNBfg")
-model = genai.GenerativeModel("gemini-1.5-flash")
+genai.configure(api_key="AIzaSyCs3CnyDyIJLHMSU5o52ciK3HniDXDLBJM")
+model = genai.GenerativeModel("gemini-1.5-pro")
 
 # Google Places API Key
 GOOGLE_PLACES_API_KEY = "YOUR_GOOGLE_PLACES_API_KEY"  # Replace with your API key
@@ -263,6 +263,7 @@ def generate_chat_response(user_message):
     """
     Generates a clean, table-formatted response for Unani medicine queries.
     """
+    # Step 1: Check if the disease exists in unani_medicines
     words = user_message.lower().split()
     for word in words:
         if word in unani_medicines:
@@ -276,69 +277,23 @@ def generate_chat_response(user_message):
                     response += f"<p style='color: blue; font-size: 16px;'><a href='{med['link']}' style='text-decoration: none; color: green;'>{med['name']}</a> - ₹{med['price']}</p>"
             return response
 
-    # Check Unani ingredients table
-    ingredients = get_unani_ingredients(user_message.lower())
-    table_rows = ""
-    explanation_paragraph = ""
-    if ingredients:
-        table_rows = ""
-        for ingredient in ingredients:
-            table_rows += f"""
-               <tr style='border: 1px solid #ddd; background-color: white;'>
-                        <td style='padding: 8px;'>{parts[0]}</td>
-                        <td style='padding: 8px;'>{parts[1]}</td>
-                        <td style='padding: 8px;'>{parts[2]}</td>
-                        <td style='padding: 8px;'>{parts[3]}</td>
-                    </tr>
-            """
-        explanation_paragraph = "<p style='font-style: italic;'>The ingredients have been used in Unani medicine for centuries. [Include specific references here based on disease]</p>"
-        response = f"""
-        <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
-        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-        <thead>
-            <tr style='background-color: white;'>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Dosage</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
-                <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Precautions</span></th>
-            </tr>
-        </thead>
-        <tbody style='color: black;'>
-        {table_rows}
-        </tbody>
-        </table>
-        {explanation_paragraph}
-        <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
-        """
-        return response
-
-    # Fallback to Gemini API
+    # Step 2: If disease not found in unani_medicines, fetch from Gemini API
     prompt = f"""
-   When the user asks about a disease, suggest different prophetic ingredients each time based on the illness, ensuring variety instead of repeating the same ingredients. Use a pool of 120 globally recognized prophetic ingredients, and ensure each response includes unique ingredients.
+    When the user asks about a disease, suggest different prophetic ingredients each time based on the illness, ensuring variety instead of repeating the same ingredients. Use a pool of 120 globally recognized prophetic ingredients, and ensure each response includes unique ingredients.
 
-When the user starts the conversation with greetings, respond with:
-'As-salamu alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah (SWT) be upon you. How can I assist you today?'
+    If the user is asking about a disease that exists in the world: {user_message}. Since this disease is not in our database, suggest only properly verified prophetic Unani ingredients or remedies to manage or treat this condition. These ingredients must be:
 
-If the user is asking about a disease that exists in the world: {user_message}. Since this disease is not in our database, suggest only properly verified prophetic Unani ingredients or remedies to manage or treat this condition. These ingredients must be:
+    Religiously Authentic: Supported by authentic references from the Quran or Sahih Hadith.
+    Scientifically Validated: Backed by modern scientific research where possible, to ensure credibility.
+    Globally Recognized: Mentioned in Islamic books and traditions that are accepted worldwide.
+    If the user is asking about a disease that does not exist, suggest: 'Please enter a valid disease.'
 
-Religiously Authentic: Supported by authentic references from the Quran or Sahih Hadith.
-Scientifically Validated: Backed by modern scientific research where possible, to ensure credibility.
-Globally Recognized: Mentioned in Islamic books and traditions that are accepted worldwide.
-If the user is asking about a disease that does not exist, suggest: 'Please enter a valid disease.'
-
-If the user asks any question related to Islam, provide an answer along with two proofs:
-
-For Quranic references: "Allah (SWT) says in the Quran, '[Quote the exact verse].' (Surah Name, Ayat Number)"
-For Hadith references: "The Prophet (ﷺ) said, '[Quote the exact Hadith].' (Hadith Source)"
-Ensure that the references are authentic and widely accepted by Islamic scholars.
-
-Response Format:
-   | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
+    Response Format:
+    | Ingredient            | Dosage                   | Benefits                                                                    | Precautions                              |
     |-----------------------|--------------------------|-----------------------------------------------------------------------------|------------------------------------------|
     | [Name of ingredient]  | [Recommended dosage]     | [Benefits of the ingredient]                                                | [Precautions or side effects]            |
 
     Guidelines for Benefits Section:
-
         Always provide proof from the Quran or Hadith in the following format:
             For Quranic references: Allah (SWT) says in the Quran, "[Quote the exact verse]." (Surah Name, Ayat Number)
             For Hadith references: The Prophet (ﷺ) said, "[Quote the exact Hadith]." (Hadith Source)
@@ -509,21 +464,6 @@ Response Format:
 
     if not explanation_paragraph:
         explanation_paragraph = "<p style='font-style: italic;'>The ingredients have been used in Unani medicine for centuries. They are supported by both Islamic teachings and scientific research.</p>"
-    
-
-    # Handle greetings
-    if user_message.lower().startswith(("hello", "hi", "sala",)):
-        response = """
-        <p style='font-style: italic;'>As-salam alaykum wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
-        """
-        return response
-    
-    # Handle greetings
-    if user_message.lower().startswith(("assalamualikum", "assalam")):
-        response = """
-        <p style='font-style: italic;'>Walaykum as-salam wa rahmatullahi wa barakatuh. Peace be upon you, and the mercy and blessings of Allah be upon you. How can I assist you today?</p>
-        """
-        return response
 
     response = f"""
     <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
@@ -544,13 +484,16 @@ Response Format:
     <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
     """
     return response
-
 # Home Page
 def index(request):
     """
     Renders the home page.
     """
     return render(request, 'index.html')
+
+# 2nd Page
+def chat_2_view(request):
+    return render(request, 'chat_2.html')
 
 # Logout Functionality
 def logout(request):
