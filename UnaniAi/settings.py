@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+
 # .env File Load Karna
 load_dotenv()
 
@@ -103,3 +104,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+load_dotenv()  # Load .env file
+
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
