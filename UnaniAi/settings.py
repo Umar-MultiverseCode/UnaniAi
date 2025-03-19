@@ -8,8 +8,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-
-# .env File Load Karna
+# Load .env File
 load_dotenv()
 
 # Build paths inside the project
@@ -40,10 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'UnaniAi_App',
+    'whitenoise.runserver_nostatic',  # ✅ Whitenoise ko add kiya
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ Whitenoise middleware added
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,19 +95,22 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static and Media Files
+# ✅ Static and Media Files Configuration
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'UnaniAi_App', 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Production Static Files Directory (For Collectstatic)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Local Development Static Files Directory (Check Before Adding Duplicate Files)
+STATICFILES_DIRS = [
+    BASE_DIR / 'UnaniAi_App' / 'static',
+]
+
+# ✅ Whitenoise Storage for Static Files (Only for Production)
+if not DEBUG:  # Whitenoise tabhi enable hoga jab DEBUG=False hoga
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-
-load_dotenv()  # Load .env file
-
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1").split(",")
