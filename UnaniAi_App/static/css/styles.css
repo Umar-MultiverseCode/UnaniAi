@@ -8,14 +8,10 @@
     --glass-border: rgba(255, 255, 255, 0.1);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-    
-    /* Gradients */
     --primary-gradient: linear-gradient(135deg, 
         rgba(32, 224, 196, 1) 0%,
         rgba(95, 91, 255, 1) 50%,
         rgba(255, 86, 246, 1) 100%);
-    
-    /* Shadows */
     --neon-shadow: 0 0 10px var(--primary-glow),
                   0 0 20px var(--secondary-glow),
                   0 0 30px var(--accent-glow);
@@ -69,6 +65,7 @@ body {
 .nav-links {
     display: flex;
     gap: 2rem;
+    align-items: center;
 }
 
 .nav-links a {
@@ -96,6 +93,19 @@ body {
     transform: scaleX(1);
 }
 
+.signup-btn {
+    padding: 0.5rem 1.5rem;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
 /* Hero Section */
 .hero {
     min-height: 100vh;
@@ -111,6 +121,7 @@ body {
     text-align: center;
     z-index: 2;
     max-width: 800px;
+    width: 100%;
 }
 
 /* Chatbot Avatar */
@@ -244,34 +255,6 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Particle Animation */
-.particle-container {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.particle {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: var(--primary-glow);
-    border-radius: 50%;
-    pointer-events: none;
-    animation: float 15s infinite linear;
-}
-
-.particle:nth-child(2n) {
-    background: var(--secondary-glow);
-    animation-duration: 20s;
-}
-
-.particle:nth-child(3n) {
-    background: var(--accent-glow);
-    animation-duration: 25s;
-}
-
 /* Footer */
 .glass-footer {
     background: var(--glass-bg);
@@ -313,54 +296,202 @@ body {
     border-top: 1px solid var(--glass-border);
 }
 
+/* Signup/Login Container */
+.signup-container {
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 500px;
+    margin: 1rem auto;
+    border-radius: 20px;
+}
+
+.signup-container h2 {
+    margin-bottom: 1.5rem;
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+}
+
+.form-group input {
+    padding: 0.75rem;
+    font-size: 1rem;
+    width: 100%;
+    border: none;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    box-shadow: var(--neon-shadow);
+}
+
+.signup-container p {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 1rem;
+}
+
+.signup-container p a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.signup-container p a:hover {
+    text-decoration: underline;
+}
+
+/* Table Styling */
+.message-content table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 15px;
+    font-size: 15px;
+    overflow-x: hidden;
+    display: table;
+    background: var(--background);
+}
+
+table, th, td {
+    border: 1px solid var(--glass-border);
+}
+
+th, td {
+    padding: 6px;
+    text-align: left;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+table:empty {
+    border: none;
+}
+
+td:empty, th:empty {
+    border: none;
+}
+
+th {
+    background-color: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+}
+
+/* Particle Animation */
+.particle-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--primary-glow);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: float 15s infinite linear;
+}
+
+.particle:nth-child(2n) {
+    background: var(--secondary-glow);
+    animation-duration: 20s;
+}
+
+.particle:nth-child(3n) {
+    background: var(--accent-glow);
+    animation-duration: 25s;
+}
+
 /* Animations */
 @keyframes rotate {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 @keyframes typing {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-5px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 @keyframes float {
-    0% {
-        transform: translateY(0) translateX(0);
-    }
-    50% {
-        transform: translateY(-100vh) translateX(100vw);
-    }
-    100% {
-        transform: translateY(-200vh) translateX(0);
-    }
+    0% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(-100vh) translateX(100vw); }
+    100% { transform: translateY(-200vh) translateX(0); }
 }
 
 @keyframes pulse {
-    0%, 100% {
-        box-shadow: var(--neon-shadow);
-    }
-    50% {
-        box-shadow: none;
-    }
+    0%, 100% { box-shadow: var(--neon-shadow); }
+    50% { box-shadow: none; }
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .glass-nav {
+        padding: 1rem;
+        flex-wrap: wrap;
+    }
+
     .nav-links {
         display: none;
+        flex-direction: column;
+        width: 100%;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .menu-toggle {
+        display: block;
     }
 
     .hero-content {
         padding: 1rem;
+    }
+
+    .chatbot-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .chat-bubble {
+        padding: 1rem;
+        max-width: 300px;
+    }
+
+    .search-container {
+        max-width: 400px;
+    }
+
+    .cta-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .features {
+        padding: 2rem 1rem;
     }
 
     .feature-container {
@@ -372,8 +503,145 @@ body {
         text-align: center;
     }
 
-    .footer-section a {
-        margin: 0.5rem auto;
+    .signup-container {
+        padding: 1.5rem;
+        max-width: 400px;
+    }
+
+    .form-group label {
+        font-size: 1rem;
+    }
+
+    .form-group input {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .message-content table {
+        font-size: 13px;
+    }
+
+    th, td {
+        padding: 4px;
+        width: 25%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .glass-nav {
+        padding: 0.8rem;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .chatbot-avatar {
+        width: 80px;
+        height: 80px;
+    }
+
+    .chat-bubble {
+        padding: 0.8rem;
+        max-width: 250px;
+    }
+
+    .search-container {
+        max-width: 300px;
+    }
+
+    .cta-button {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-icon {
+        font-size: 2rem;
+    }
+
+    .signup-container {
+        padding: 1rem;
+        max-width: 100%;
+        margin: 0.5rem;
+    }
+
+    .signup-container h2 {
+        font-size: 1.5rem;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+    }
+
+    .form-group input {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .message-content table {
+        font-size: 11px;
+    }
+
+    th, td {
+        padding: 3px;
+        width: 25%;
+    }
+}
+
+@media (max-width: 360px) {
+    .chatbot-avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    .chat-bubble {
+        padding: 0.6rem;
+        max-width: 200px;
+    }
+
+    .search-container {
+        max-width: 250px;
+    }
+
+    .cta-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .feature-card {
+        padding: 1rem;
+    }
+
+    .feature-icon {
+        font-size: 1.5rem;
+    }
+
+    .signup-container {
+        padding: 0.8rem;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+    }
+
+    .form-group input {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+    }
+
+    .message-content table {
+        font-size: 10px;
+    }
+
+    th, td {
+        padding: 2px;
+        width: 25%;
+        line-height: 1.2;
     }
 }
 
@@ -388,4 +656,3 @@ body {
 .pulse {
     animation: pulse 2s infinite;
 }
-

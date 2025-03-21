@@ -20,8 +20,9 @@
             <a href="#">Consult</a>
             <a href="#">Remedies</a>
             <a href="#">Contact</a>
-            <a href="{% url 'signup' %}" class="signup-btn glass">Sign Up</a> <!-- Added Sign Up Button -->
+            <a href="{% url 'signup' %}" class="signup-btn glass">Sign Up</a>
         </div>
+        <button class="menu-toggle">☰</button>
     </nav>
 
     <!-- Hero Section -->
@@ -74,56 +75,48 @@
                 <p>Discover the power of natural ingredients and ancient healing wisdom.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">🔮</div>
                 <h3>Personalized Care</h3>
                 <p>AI-powered recommendations based on your unique constitution.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">⚡</div>
                 <h3>Instant Insights</h3>
                 <p>Get immediate access to centuries of Unani medical knowledge.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">🎯</div>
                 <h3>Mizaj Analysis</h3>
                 <p>Advanced AI assessment of your temperament and body constitution.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">🌡️</div>
                 <h3>Symptom Checker</h3>
                 <p>Intelligent analysis of symptoms based on Unani principles.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">📚</div>
                 <h3>Knowledge Base</h3>
                 <p>Extensive library of Unani herbs, treatments, and remedies.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">🔄</div>
                 <h3>Lifestyle Integration</h3>
                 <p>Personalized recommendations for diet, exercise, and daily routines.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">🤝</div>
                 <h3>Expert Connection</h3>
                 <p>Direct access to certified Unani practitioners for consultation.</p>
                 <div class="card-glow"></div>
             </div>
-
             <div class="feature-card glass">
                 <div class="feature-icon">📊</div>
                 <h3>Progress Tracking</h3>
@@ -142,7 +135,6 @@
                 </div>
                 <p>Ancient wisdom meets modern technology</p>
             </div>
-            
             <div class="footer-section">
                 <h4>Quick Links</h4>
                 <a href="#">Home</a>
@@ -150,14 +142,12 @@
                 <a href="#">Consult</a>
                 <a href="#">Privacy Policy</a>
             </div>
-            
             <div class="footer-section">
                 <h4>Contact</h4>
                 <a href="#">Support</a>
                 <a href="#">Appointments</a>
                 <a href="#">Feedback</a>
             </div>
-            
             <div class="footer-section">
                 <h4>Follow Us</h4>
                 <div class="social-links">
@@ -168,8 +158,15 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 UnaniAI. All rights reserved.</p>
+            <p>© 2024 UnaniAI. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Script for Mobile Menu -->
+    <script>
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+    </script>
 </body>
 </html>
