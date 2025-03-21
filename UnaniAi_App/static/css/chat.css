@@ -424,8 +424,8 @@ body {
 /* Table Styling */
 table {
     width: 100%;
-    border-collapse: separate; /* Changed to separate to control borders better */
-    border-spacing: 0; /* No gaps between cells */
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 15px;
     font-size: 15px;
 }
@@ -441,21 +441,19 @@ th, td {
     word-wrap: break-word;
 }
 
-/* Fix for Laptop: Hide borders in empty areas */
 table:empty {
-    border: none; /* No border if table is empty */
+    border: none;
 }
 
 td:empty, th:empty {
-    border: none; /* Remove border for empty cells */
+    border: none;
 }
 
-/* Ensure table fits within message content */
 .message-content table {
     max-width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden; /* No horizontal scroll */
     display: block;
-    background: var(--background-light); /* Match AI message background */
+    background: var(--background-light);
 }
 
 th {
@@ -611,8 +609,6 @@ th {
     }
 
     .message-content table {
-        display: block;
-        overflow-x: auto;
         width: 100%;
         max-width: 100%;
         font-size: 14px;
@@ -620,8 +616,8 @@ th {
 
     th, td {
         padding: 4px;
-        min-width: 70px;
-        max-width: 120px;
+        max-width: 25%; /* Equal width distribution */
+        min-width: 0; /* Allow shrinking */
         white-space: normal;
         word-wrap: break-word;
     }
@@ -641,24 +637,44 @@ th {
     }
 
     th, td {
-        min-width: 50px;
-        max-width: 90px; /* Tighter max-width for smaller screens */
+        max-width: 25%;
         padding: 3px;
     }
 }
 
-@media (max-width: 360px) { /* For very small mobiles like older iPhones */
+@media (max-width: 360px) {
     .message-content table {
         font-size: 11px;
+        display: table; /* Revert to table for better control */
     }
 
     th, td {
-        min-width: 40px; /* Even smaller for tiny screens */
-        max-width: 80px;
+        max-width: 25%;
         padding: 2px;
     }
 
-    .message-content {
-        padding: 0.6rem;
+    /* Stack table as vertical list on very small screens */
+    .message-content table {
+        display: block;
+    }
+
+    thead, tbody, tr, th, td {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    th {
+        background-color: #e5e7eb; /* Lighter header for clarity */
+        font-weight: bold;
+    }
+
+    td {
+        border-top: none; /* Cleaner look */
+        padding-left: 10px; /* Indent data */
+    }
+
+    tr {
+        margin-bottom: 8px; /* Space between rows */
     }
 }
