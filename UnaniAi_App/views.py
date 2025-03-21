@@ -109,56 +109,86 @@ def get_unani_ingredients(disease):
     return ingredients
 
 def generate_chat_response(user_message):
-    # Yeh function same rakha, koi database operation nahi hai yaha
-    words = user_message.lower().split()
+    """
+    Generates a crisp, table-formatted response for Unani medicine queries with inline CSS.
+    """
+    user_message = user_message.lower().strip()
+
+    # 1. Handle Pure Greetings (only if message is a greeting)
+    greetings = ["hello", "hi", "sala", "assalam"]
+    if user_message in greetings:
+        return "<p style='color: white; font-style: italic;'>As-salamu alaykum! How can I assist you today?</p>"
+
+    # 2. Check Known Diseases in unani_medicines
+    words = user_message.split()
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
-            response = f"<h3 style='color: white;'>Unani Treatment for {word.capitalize()}</h3>"
+            response = f"<h3 style='color: white;'>Unani for {word.capitalize()}</h3>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>"
-            if "medicine" in data and data["medicine"]:
-                response += "<h4 style='color: #ffcc00;'>Recommended Medicines:</h4>"
-                for med in data["medicine"]:
-                    response += f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>"
+            if data.get("medicine"):
+                response += "<h4 style='color: #ffcc00;'>Medicines:</h4>"
+                response += "".join(f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>" for med in data["medicine"])
             return response
 
-    ingredients = get_unani_ingredients(user_message.lower())
+    # 3. Check Unani Ingredients Table (if populated)
+    ingredients = get_unani_ingredients(user_message)
     if ingredients:
-        table_rows = ""
-        for ingredient in ingredients:
-            table_rows += f"""
-                <tr style='border: 1px solid #ddd; background-color: white;'>
-                    <td style='padding: 8px;'>{ingredient[0]}</td>
-                    <td style='padding: 8px;'>{ingredient[1]}</td>
-                    <td style='padding: 8px;'>{ingredient[2]}</td>
-                </tr>
-            """
-        response = f"""
-        <h3 style='color: #ffffff;'>Unani Ingredients for {user_message.capitalize()}</h3>
-        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-            <thead>
-                <tr style='background-color: white;'>
-                    <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>
-                    <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Benefits</span></th>
-                    <th style='border: 1px solid #000000; padding: 8px;'><span style='color: black;'>Usage</span></th>
-                </tr>
-            </thead>
-            <tbody style='color: black;'>
-            {table_rows}
-            </tbody>
-        </table>
-        <p style='font-style: italic;'>Indeed, the cure is Allah's will.</p>
-        """
-        return response
+        table_rows = "".join(
+            f"<tr style='border: 1px solid #ddd; background-color: white;'>"
+            f"<td style='padding: 8px;'>{ing[0]}</td>"
+            f"<td style='padding: 8px;'>{ing[1]}</td>"
+            f"<td style='padding: 8px;'>{ing[2]}</td>"
+            f"</tr>" for ing in ingredients
+        )
+        return (f"<h3 style='color: #ffffff;'>Ingredients for {user_message.capitalize()}</h3>"
+                f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
+                f"<thead><tr style='background-color: white;'>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Benefits</span></th>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Usage</span></th>"
+                f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
+                f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
+    # 4. Fallback to Gemini API for Unknown Queries
     prompt = f"""
-    You are an expert in Unani medicine. Answer based on only prophetic Unani principles...
+    You are an expert in prophetic Unani medicine. Answer in short, crisp sentences based only on Islamic Unani principles.
+    User query: "{user_message}". If it’s a disease or health issue:
+    - Suggest 1-2 prophetic Unani remedies in this table format:
+    | Ingredient | Dosage         | Benefits             | Precautions         |
+    |------------|----------------|----------------------|---------------------|
+    | [Name]     | [Dosage]       | [Short benefit]      | [Short precaution]  |
+    - End with "Indeed, the cure is Allah's will."
+    If it’s a random query (e.g., "how are you", "tell me a joke"), reply: "I’m here to help with Unani medicine. Ask me anything!"
     """
-    gemini_response = model.generate_content(prompt).text
-    cleaned_response = remove_markdown_formatting(gemini_response)
-    # Baaki logic same rakha brevity ke liye
-    return cleaned_response  # Simplified, pura logic same hai
+    gemini_response = model.generate_content(prompt).text.strip()
+    lines = gemini_response.split('\n')
+    table_rows = ""
+    for line in lines:
+        if line.startswith('|') and not line.startswith('| Ingredient') and not line.startswith('|---'):
+            parts = [part.strip() for part in line.split('|')[1:-1]]
+            if len(parts) == 4:
+                table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
+                               f"<td style='padding: 8px;'>{parts[0]}</td>"
+                               f"<td style='padding: 8px;'>{parts[1]}</td>"
+                               f"<td style='padding: 8px;'>{parts[2]}</td>"
+                               f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
+
+    # 5. Handle Random Queries or Gemini Fallback
+    if "I’m here to help" in gemini_response:
+        return "<p style='color: white;'>I’m here to help with Unani medicine. Ask me anything!</p>"
+    
+    return (f"<h3 style='color: #ffffff;'>{user_message.capitalize()}</h3>"
+            f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
+            f"<thead><tr style='background-color: white;'>"
+            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
+            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Dosage</span></th>"
+            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Benefits</span></th>"
+            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Precautions</span></th>"
+            f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
+            f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
+
 
 def index(request):
     return render(request, 'index.html')
