@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UnaniAI Chat Interface</title>
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
-    <link rel="stylesheet" href="{% static 'css/history.css' %}">
-    <link rel="stylesheet" href="{% static 'css/logout.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'css/history.css' %}">
+    <link rel="stylesheet" href="{% static 'css/logout.css' %}"> {% endcomment %}
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
@@ -771,37 +771,37 @@
         function loadImage() {
             const container = document.getElementById('model-container');
             const scene = new THREE.Scene();
-
+        
             const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-
+        
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.setClearColor(0x000000, 0); // Transparent background
             container.appendChild(renderer.domElement);
-
+        
             // Add lighting
             const light = new THREE.DirectionalLight(0xffffff, 1);
             light.position.set(5, 5, 5).normalize();
             scene.add(light);
-
+        
             // Create a texture loader
             const textureLoader = new THREE.TextureLoader();
-            const imageUrl = "{% static 'images/554502.jpg' %}"; // Replace with your image path
-
+            const imageUrl = "{% static 'images/part3.jpg' %}"; // Your image path
+        
             // Load the image as a texture
             textureLoader.load(imageUrl, function (texture) {
                 const geometry = new THREE.PlaneGeometry(200, 200); // Adjust size as needed
                 const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
                 const imageMesh = new THREE.Mesh(geometry, material);
-
-                // Set the image position
-                imageMesh.position.set(0, 0, 0);
+        
+                // Shift the image to the right side
+                imageMesh.position.set(100, 0, 0); // Adjust x-value to shift right (positive x moves right)
                 scene.add(imageMesh);
-
+        
                 // Adjust camera position
-                camera.position.set(0, 0, 300); // Adjust camera position to fit the image
-                camera.lookAt(0, 0, 0);
-
+                camera.position.set(100, 0, 300); // Move camera to align with the image
+                camera.lookAt(100, 0, 0); // Point camera towards the image
+        
                 // Animation loop (No rotation, just rendering)
                 function animate() {
                     requestAnimationFrame(animate);
