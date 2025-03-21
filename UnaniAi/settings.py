@@ -78,6 +78,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 20,  # 20 seconds timeout to handle locking
+        },
     }
 }
 
@@ -97,8 +100,7 @@ USE_TZ = True
 
 # Static and Media Files Configuration
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Where collectstatic puts files
-# STATICFILES_DIRS hata diya kyunki app-level static folder se files mil rahi hain
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (optional, agar use kar raha hai)

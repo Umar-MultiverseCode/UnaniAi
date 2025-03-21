@@ -1,10 +1,10 @@
 from django.urls import path
-from .views import index, chat_view, chatbot_response, signup, login,logout,emergency_assistance,add_medicine_reminder,medicine_reminders,send_medicine_reminders
+from .views import index, chat_view, chatbot_response, signup, login, logout, emergency_assistance, add_medicine_reminder, medicine_reminders, send_medicine_reminders
 
 urlpatterns = [
-    path('', index, name='index'),  # Home page
-    path('chat/', chat_view, name='chat_view'),  # Chat page
-    path('chatbot/', chatbot_response, name='chatbot_response'),  # API endpoint for chatbot
+    path('', index, name='index'),
+    path('chat/', chat_view, name='chat_view'),
+    path('chatbot/', chatbot_response, name='chatbot_response'),
     path('signup/', signup, name='signup'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
