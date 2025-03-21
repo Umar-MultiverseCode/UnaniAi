@@ -452,7 +452,7 @@ td:empty, th:empty {
 .message-content table {
     max-width: 100%;
     overflow-x: hidden; /* No horizontal scroll */
-    display: block;
+    display: table; /* Keep table layout */
     background: var(--background-light);
 }
 
@@ -611,13 +611,13 @@ th {
     .message-content table {
         width: 100%;
         max-width: 100%;
-        font-size: 14px;
+        font-size: 13px; /* Slightly smaller */
     }
 
     th, td {
         padding: 4px;
-        max-width: 25%; /* Equal width distribution */
-        min-width: 0; /* Allow shrinking */
+        width: 25%; /* Equal distribution */
+        min-width: 0; /* Allow full shrinking */
         white-space: normal;
         word-wrap: break-word;
     }
@@ -633,48 +633,29 @@ th {
     }
 
     .message-content table {
-        font-size: 12px;
+        font-size: 11px; /* Tighter text */
     }
 
     th, td {
-        max-width: 25%;
         padding: 3px;
+        width: 25%;
+        min-width: 0;
     }
 }
 
 @media (max-width: 360px) {
     .message-content table {
-        font-size: 11px;
-        display: table; /* Revert to table for better control */
+        font-size: 10px; /* Smallest readable size */
     }
 
     th, td {
-        max-width: 25%;
         padding: 2px;
+        width: 25%;
+        min-width: 0;
+        line-height: 1.2; /* Tighter line height */
     }
 
-    /* Stack table as vertical list on very small screens */
-    .message-content table {
-        display: block;
-    }
-
-    thead, tbody, tr, th, td {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    th {
-        background-color: #e5e7eb; /* Lighter header for clarity */
-        font-weight: bold;
-    }
-
-    td {
-        border-top: none; /* Cleaner look */
-        padding-left: 10px; /* Indent data */
-    }
-
-    tr {
-        margin-bottom: 8px; /* Space between rows */
+    .message-content {
+        padding: 0.6rem;
     }
 }
