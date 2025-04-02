@@ -111,10 +111,11 @@ def get_unani_ingredients(disease):
 def generate_chat_response(user_message):
     """
     Generates a crisp, table-formatted response for Unani medicine queries with inline CSS.
+    Number of remedies varies based on disease severity.
     """
     user_message = user_message.lower().strip()
 
-    # 1. Handle Pure Greetings (only if message is a greeting)
+    # 1. Handle Pure Greetings
     greetings = ["hello", "hi", "sala", "assalam"]
     if user_message in greetings:
         return "<p style='color: white; font-style: italic;'>As-salamu alaykum! How can I assist you today?</p>"
@@ -151,11 +152,29 @@ def generate_chat_response(user_message):
                 f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
                 f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
-    # 4. Fallback to Gemini API for Unknown Queries
+    # 4. Fallback to Gemini API with Dynamic Remedy Count
+    # Define disease severity levels (example)
+    severity_levels = {
+        "cold": "mild", "cough": "mild", "fever": "moderate", "flu": "moderate",
+        "pneumonia": "severe", "tuberculosis": "severe", "cancer": "severe"
+    }
+    
+    # Determine severity and remedy count
+    remedy_count = 3  # Default for mild or unknown
+    for word in words:
+        if word in severity_levels:
+            if severity_levels[word] == "mild":
+                remedy_count = 3
+            elif severity_levels[word] == "moderate":
+                remedy_count = 4
+            elif severity_levels[word] == "severe":
+                remedy_count = 5
+            break
+
     prompt = f"""
     You are an expert in prophetic Unani medicine. Answer in short, crisp sentences based only on Islamic Unani principles.
     User query: "{user_message}". If it’s a disease or health issue:
-    - Suggest 1-2 prophetic Unani remedies in this table format:
+    - Suggest exactly {remedy_count} prophetic Unani remedies in this table format:
     | Ingredient | Dosage         | Benefits             | Precautions         |
     |------------|----------------|----------------------|---------------------|
     | [Name]     | [Dosage]       | [Short benefit]      | [Short precaution]  |
@@ -188,7 +207,6 @@ def generate_chat_response(user_message):
             f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Precautions</span></th>"
             f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
             f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
-
 
 def index(request):
     return render(request, 'index.html')
