@@ -1,4 +1,4 @@
-{% load static %}
+{% comment %} {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,6 +69,203 @@
         });
     </script>
     <!-- signup.html aur login.html -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html> {% endcomment %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if reset_form %}Reset Password
+        {% elif reset_done %}Email Sent
+        {% elif reset_confirm %}Set New Password
+        {% elif reset_complete %}Password Reset Complete
+        {% else %}Log In - Unani AI{% endif %}
+    </title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for password reset */
+        .password-reset-instructions {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .password-reset-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="logo">
+            <span class="neon-text">Unani</span>AI
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'index' %}">Home</a>
+            <a href="#">About</a>
+            <a href="#">Consult</a>
+            <a href="#">Remedies</a>
+            <a href="#">Contact</a>
+            {% if not reset_form and not reset_done and not reset_confirm and not reset_complete %}
+            <a href="{% url 'signup' %}" class="signup-btn glass">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content Section -->
+    <section class="hero">
+        <div class="particle-container">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        
+        <div class="hero-content">
+            {% if reset_form %}
+            <!-- Password Reset Request Form -->
+            <div class="signup-container glass" style="width: 500px; padding: 40px; border-radius: 20px; margin: 20px auto;">
+                <h2>Reset Password</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="id_email" style="font-size: 18px; color: #fff;">Email</label>
+                        <input type="email" name="email" id="id_email" class="glass" 
+                               style="padding: 12px; font-size: 16px; width: 100%;" 
+                               placeholder="Enter your email" required>
+                    </div>
+                    <button type="submit" class="cta-button pulse password-reset-btn">
+                        Request Password Reset
+                        <div class="button-glow"></div>
+                    </button>
+                </form>
+            </div>
+
+            {% elif reset_done %}
+            <!-- Password Reset Email Sent -->
+            <div class="signup-container glass" style="width: 500px; padding: 40px; border-radius: 20px; margin: 20px auto;">
+                <h2>Password Reset Sent</h2>
+                <div class="password-reset-instructions">
+                    <p>We've emailed you instructions for setting your password.</p>
+                    <p>If you don't receive an email, please make sure you've entered the address you registered with, and check your spam folder.</p>
+                </div>
+                <a href="{% url 'login' %}" class="cta-button pulse">
+                    Return to Login
+                    <div class="button-glow"></div>
+                </a>
+            </div>
+
+            {% elif reset_confirm %}
+            <!-- Password Reset Confirm -->
+            <div class="signup-container glass" style="width: 500px; padding: 40px; border-radius: 20px; margin: 20px auto;">
+                <h2>Set New Password</h2>
+                {% if validlink %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="id_new_password1" style="font-size: 18px; color: #fff;">New Password</label>
+                        <input type="password" name="new_password1" id="id_new_password1" class="glass" 
+                               style="padding: 12px; font-size: 16px; width: 100%;" 
+                               placeholder="Enter new password" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="id_new_password2" style="font-size: 18px; color: #fff;">Confirm Password</label>
+                        <input type="password" name="new_password2" id="id_new_password2" class="glass" 
+                               style="padding: 12px; font-size: 16px; width: 100%;" 
+                               placeholder="Confirm new password" required>
+                    </div>
+                    <button type="submit" class="cta-button pulse password-reset-btn">
+                        Reset Password
+                        <div class="button-glow"></div>
+                    </button>
+                </form>
+                {% else %}
+                <div class="password-reset-instructions">
+                    <p>The password reset link was invalid, possibly because it has already been used.</p>
+                    <p>Please request a new password reset.</p>
+                </div>
+                <a href="{% url 'password_reset' %}" class="cta-button pulse">
+                    Request New Reset
+                    <div class="button-glow"></div>
+                </a>
+                {% endif %}
+            </div>
+
+            {% elif reset_complete %}
+            <!-- Password Reset Complete -->
+            <div class="signup-container glass" style="width: 500px; padding: 40px; border-radius: 20px; margin: 20px auto;">
+                <h2>Password Reset Complete</h2>
+                <div class="password-reset-instructions">
+                    <p>Your password has been set successfully.</p>
+                    <p>You may now log in with your new password.</p>
+                </div>
+                <a href="{% url 'login' %}" class="cta-button pulse">
+                    Log In Now
+                    <div class="button-glow"></div>
+                </a>
+            </div>
+
+            {% else %}
+            <!-- Default Login Form -->
+            <div class="signup-container glass" style="width: 500px; padding: 40px; border-radius: 20px; margin: 20px auto;">
+                <h2>Log In</h2>
+                <form class="signup-form" method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="email" style="font-size: 18px; color: #fff;">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Enter your email" class="glass" style="padding: 12px; font-size: 16px; width: 100%;" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label for="password" style="font-size: 18px; color: #fff;">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" class="glass" style="padding: 12px; font-size: 16px; width: 100%;" required>
+                    </div>
+                    <button type="submit" class="cta-button pulse">
+                        Log In
+                        <div class="button-glow"></div>
+                    </button>
+                </form>
+                
+                <!-- Forgot Password Link -->
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="{% url 'password_reset' %}" style="color: rgba(255, 255, 255, 0.8); text-decoration: none;">
+                        Forgot Password?
+                    </a>
+                </div>
+                
+                <p style="text-align: center; color: rgba(255, 255, 255, 0.8); margin-top: 15px;">
+                    Don't have an account? <a href="{% url 'signup' %}" id="signup-link">Sign Up</a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Script for Signup Link -->
+    <script>
+        document.getElementById('signup-link')?.addEventListener('click', function(event) {
+            event.preventDefault();
+            window.location.href = "{% url 'signup' %}";
+        });
+    </script>
+    
+    <!-- Messages Display -->
     {% if messages %}
     <div class="messages">
         {% for message in messages %}

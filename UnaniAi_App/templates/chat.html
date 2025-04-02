@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     <link rel="stylesheet" href="{% static 'css/history.css' %}">
     <link rel="stylesheet" href="{% static 'css/logout.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
     <style>
-        /* Add this CSS for the table */
+        /* Table styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -29,11 +30,11 @@
             background-color: #f2f2f2;
         }
 
-        /* Add this CSS for the sidebar */
+        /* Sidebar styles */
         .sidebar {
             position: fixed;
             top: 0;
-            left: -300px; /* Initially hidden */
+            left: -300px;
             width: 300px;
             height: 100%;
             background: rgba(255, 255, 255, 0.1);
@@ -43,32 +44,46 @@
             display: flex;
             flex-direction: column;
         }
-
         .sidebar.open {
-            left: 0; /* Show sidebar */
+            left: 0;
         }
 
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-content {
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        .sidebar-footer {
-            padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Image container - Updated */
+        #image-section {
+            position: fixed;
+            left: -5%;
+            top: 70%;
+            transform: translateY(-50%);
+            width: 350px;
+            z-index: 1;
             text-align: center;
+            margin-left: 20px;
+        }
+        #model-container {
+            width: 350px;
+            height: 350px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        #model-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .body-parts-label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
 
-        .close-sidebar-btn {
-            width: 50%;
-            background-color: yellow;
+        /* Chat container adjustments */
+        .chat-container {
+            position: relative;
+            padding-left: 300px;
         }
 
+        /* Menu button styles */
         .menu-btn {
             position: absolute;
             top: 20px;
@@ -78,9 +93,8 @@
             border: none;
             cursor: pointer;
         }
-
         .menu-btn.hide {
-            display: none; /* Hide menu button when sidebar is open */
+            display: none;
         }
 
         /* Hamburger Icon */
@@ -89,7 +103,6 @@
             flex-direction: column;
             gap: 5px;
         }
-
         .hamburger-icon span {
             width: 30px;
             height: 3px;
@@ -110,7 +123,6 @@
             justify-content: center;
             align-items: center;
         }
-
         #blank-window-content {
             background: Transparent;
             padding: 20px;
@@ -119,14 +131,12 @@
             max-width: 800px;
             text-align: center;
         }
-
         .body-part-images {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
         }
-
         .body-part-images img {
             width: 150px;
             height: 150px;
@@ -135,23 +145,9 @@
             cursor: pointer;
             transition: transform 0.2s ease;
         }
-
-        .body-part-images figure {
-            text-align: center;
-            margin: 0;
-        }
-
         .body-part-images img:hover {
             transform: scale(1.1);
         }
-
-        .body-part-images figcaption {
-            margin-top: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-
         .close-blank-window-btn {
             margin-top: 20px;
             padding: 10px 20px;
@@ -162,115 +158,28 @@
             cursor: pointer;
         }
 
-        /* Add this CSS for the dropdown */
-        .disease-dropdown {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            background: Transparent;
-            font-size: 16px;
-            color: #333;
-            cursor: pointer;
-        }
-
-        .disease-dropdown option {
-            padding: 10px;
-        }
-
-        /* Styling for History, Emergency, and Reminder Buttons */
-        .history-btn, .emergency-btn, .reminder-btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            gap: 10px;
-            width: 50%;
-            margin-bottom: 10px;
-        }
-
-        .history-btn {
-            background-color: green;
-            color: white;
-        }
-
-        .emergency-btn {
-            background-color: red;
-            color: white;
-        }
-
-        .reminder-btn {
-            background-color: blue;
-            color: white;
-        }
-
-        /* Modal Styles */
+        /* Modal styles */
         .modal {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7); /* Darker overlay for better focus */
+            background: rgba(0, 0, 0, 0.7);
             justify-content: center;
             align-items: center;
-            z-index: 1003; /* Ensure it's above other elements */
+            z-index: 1003;
         }
-
         .modal-content {
-            background: #ffffff; /* White background */
+            background: #ffffff;
             padding: 25px;
-            border-radius: 12px; /* Slightly rounded corners */
-            width: 90%; /* Responsive width */
-            max-width: 500px; /* Max width for larger screens */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Deeper shadow for depth */
-            animation: fadeIn 0.3s ease; /* Smooth fade-in animation */
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
         }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0; /* Light border for separation */
-            padding-bottom: 10px;
-        }
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 24px; /* Larger font size for heading */
-            color: #333; /* Darker text for better readability */
-        }
-
-        .modal-header button {
-            background: none;
-            border: none;
-            font-size: 28px; /* Larger close button */
-            cursor: pointer;
-            color: #666; /* Grey color for close button */
-            transition: color 0.2s ease; /* Smooth color transition */
-        }
-
-        .modal-header button:hover {
-            color: #333; /* Darker on hover */
-        }
-
-        .modal-body {
-            margin-bottom: 20px;
-            font-size: 16px; /* Comfortable font size */
-            color: #555; /* Slightly lighter text for body */
-        }
-
-        .modal-footer {
-            text-align: right;
-            border-top: 1px solid #e0e0e0; /* Light border for separation */
-            padding-top: 15px;
-        }
-
-        /* Fade-in animation for modal */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -281,15 +190,46 @@
                 transform: translateY(0);
             }
         }
+
+        /* Chat message styles */
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .message-content {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .ai-message .message-content {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .user-message .message-content {
+            background: rgba(0, 123, 255, 0.1);
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <div id="model-container" onclick="openBlankWindow()"></div> <!-- Add click event here -->
+        <!-- Image Section with Label -->
+        <div id="image-section">
+            <div id="model-container" onclick="openBlankWindow()"></div>
+            <div class="body-parts-label">Body Parts</div>
+        </div>
+        
         <!-- Main Chat Area -->
         <main class="chat-main">
             <div class="chat-header glass">
-                <!-- Menu Button -->
                 <button class="menu-btn glass" onclick="toggleSidebar()">
                     <div class="hamburger-icon">
                         <span></span>
@@ -411,7 +351,6 @@
                 </button>
             </div>
             <div class="history-content">
-                <!-- Displaying the actual conversation history -->
                 <div class="history-messages">
                     {% for message, response, timestamp in history %}
                         <div class="message user-message">
@@ -433,79 +372,11 @@
                                 <div class="message-header">
                                     <span class="sender">UnaniAI</span>
                                 </div>
-                                <p>{{ response|safe }}</p> <!-- Yeh change: |safe add kiya -->
+                                <p>{{ response|safe }}</p>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reminder Modal -->
-    <div id="reminderModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Your Medicine Reminders</h2>
-                <button onclick="closeReminderModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Medicine Name</th>
-                            <th>Dosage</th>
-                            <th>Schedule</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for reminder in reminders %}
-                        <tr>
-                            <td>{{ reminder.medicine_name }}</td>
-                            <td>{{ reminder.dosage }}</td>
-                            <td>{{ reminder.schedule }}</td>
-                            <td>{{ reminder.start_date }}</td>
-                            <td>{{ reminder.end_date }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button onclick="openAddReminderModal()" class="btn btn-success">Add New Reminder</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add Reminder Modal -->
-    <div id="addReminderModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add Medicine Reminder</h2>
-                <button onclick="closeAddReminderModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="addReminderForm">
-                    <label for="medicine_name">Medicine Name:</label>
-                    <input type="text" id="medicine_name" name="medicine_name" required><br><br>
-                    
-                    <label for="dosage">Dosage:</label>
-                    <input type="text" id="dosage" name="dosage" required><br><br>
-                    
-                    <label for="schedule">Schedule (e.g., 08:00 AM, 02:00 PM, 08:00 PM):</label>
-                    <input type="text" id="schedule" name="schedule" required><br><br>
-                    
-                    <label for="start_date">Start Date:</label>
-                    <input type="date" id="start_date" name="start_date" required><br><br>
-                    
-                    <label for="end_date">End Date:</label>
-                    <input type="date" id="end_date" name="end_date"><br><br>
-                    
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" onclick="closeAddReminderModal()" class="btn btn-secondary">Cancel</button>
-                </form>
             </div>
         </div>
     </div>
@@ -540,8 +411,6 @@
         </div>
     </div>
 
-    <script src="{% static 'js/chat.js' %}"></script>
-
     <script>
         // Auto-resizing textarea
         document.querySelector(".chat-input").addEventListener("input", function() {
@@ -551,36 +420,32 @@
     
         // Submit the form via AJAX when Enter is pressed
         document.querySelector(".chat-input").addEventListener("keydown", function(event) {
-            if (event.key === "Enter" && !event.shiftKey) {  // If Enter is pressed without Shift
-                event.preventDefault();  // Prevent newline character and form submission
-                submitMessage();  // Call the function to submit the form using AJAX
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                submitMessage();
             }
         });
     
         // Function to handle form submission with AJAX
         function submitMessage() {
-            const message = document.querySelector(".chat-input").value;  // Get the message
-            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;  // Get CSRF token
+            const message = document.querySelector(".chat-input").value;
+            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
     
-            if (message.trim() === "") return;  // If the message is empty, do nothing
+            if (message.trim() === "") return;
     
-            // Add the user's message to the chat immediately
             addMessageToChat("You", message);
-    
-            // Clear the input field
             document.querySelector(".chat-input").value = '';
     
             fetch("{% url 'chatbot_response' %}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,  // Include CSRF token in headers
+                    'X-CSRFToken': csrfToken,
                 },
-                body: JSON.stringify({ message: message })  // Send the message in JSON format
+                body: JSON.stringify({ message: message })
             })
-            .then(response => response.json())  // Parse the JSON response
+            .then(response => response.json())
             .then(data => {
-                // Handle the response (add AI's message to the chat)
                 if (data.response) {
                     addMessageToChat("UnaniAI", data.response);
                 } else if (data.error) {
@@ -609,7 +474,7 @@
             headerDiv.innerHTML = `<span class="sender">${sender}</span>`;
             
             const messageText = document.createElement("p");
-            messageText.innerHTML = message; // Yeh change: innerText ki jagah innerHTML
+            messageText.innerHTML = message;
         
             contentDiv.appendChild(headerDiv);
             contentDiv.appendChild(messageText);
@@ -627,7 +492,7 @@
             const sidebar = document.getElementById("sidebar");
             const menuBtn = document.querySelector(".menu-btn");
             sidebar.classList.toggle("open");
-            menuBtn.classList.toggle("hide"); // Hide/show menu button
+            menuBtn.classList.toggle("hide");
         }
 
         // Function to toggle history window
@@ -636,11 +501,11 @@
             const chatMain = document.querySelector(".chat-main");
         
             if (historyWindow.style.display === "none" || historyWindow.style.display === "") {
-                historyWindow.style.display = "block"; // Show history window
-                chatMain.style.display = "none"; // Hide chat window
+                historyWindow.style.display = "block";
+                chatMain.style.display = "none";
             } else {
-                historyWindow.style.display = "none"; // Hide history window
-                chatMain.style.display = "flex"; // Show chat window (use flex to maintain layout)
+                historyWindow.style.display = "none";
+                chatMain.style.display = "flex";
             }
         }
 
@@ -654,7 +519,7 @@
             })
             .then(response => {
                 if (response.ok) {
-                    window.location.href = "{% url 'index' %}";  // Redirect to home page
+                    window.location.href = "{% url 'index' %}";
                 } else {
                     console.error("Logout failed");
                 }
@@ -676,18 +541,14 @@
 
         // Function to show body part info and display dropdown in chat
         function showBodyPartInfo(part) {
-            // Close the blank window
             closeBlankWindow();
 
-            // Get the chat input container
             const chatInputContainer = document.querySelector(".chat-input-container");
 
-            // Create a dropdown element
             const dropdown = document.createElement("select");
             dropdown.classList.add("disease-dropdown");
             dropdown.innerHTML = `<option value="">Select a disease related to ${part}</option>`;
 
-            // Add diseases to the dropdown
             const diseases = {
                 Head: ["Migraine", "Sinusitis", "Tension Headache", "Cluster Headache"],
                 Heart: ["Hypertension", "Coronary Artery Disease", "Arrhythmia", "Heart Failure"],
@@ -703,21 +564,70 @@
                 dropdown.appendChild(option);
             });
 
-            // Add an event listener to the dropdown
             dropdown.addEventListener("change", function () {
                 if (this.value) {
-                    // Add the selected disease to the chat input
                     const chatInput = document.querySelector(".chat-input");
                     chatInput.value = `Tell me about ${this.value}`;
-                    submitMessage(); // Automatically submit the message
+                    submitMessage();
                     dropdown.remove();
                 }
             });
 
-            // Append the dropdown to the chat input container
             chatInputContainer.insertBefore(dropdown, chatInputContainer.firstChild);
         }
 
+        // Load and render the image on the left side
+        function loadImage() {
+            const container = document.getElementById('model-container');
+            const scene = new THREE.Scene();
+
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ 
+                alpha: true, 
+                antialias: true,
+                powerPreference: "high-performance"
+            });
+
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0x000000, 0);
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5).normalize();
+            scene.add(directionalLight);
+
+            const textureLoader = new THREE.TextureLoader();
+            const imageUrl = "{% static 'images/5545023.jpg' %}";
+
+            textureLoader.load(imageUrl, function (texture) {
+                const geometry = new THREE.PlaneGeometry(350, 350);
+                const material = new THREE.MeshBasicMaterial({ 
+                    map: texture, 
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                const imageMesh = new THREE.Mesh(geometry, material);
+
+                scene.add(imageMesh);
+                camera.position.z = 400;
+
+                function animate() {
+                    requestAnimationFrame(animate);
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }, undefined, function (error) {
+                console.error('Error loading image:', error);
+            });
+        }
+
+        // Initialize the image loader
+        loadImage();
+
+        // Function to handle emergency
         function handleEmergency() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -725,12 +635,11 @@
                         const userLat = position.coords.latitude;
                         const userLon = position.coords.longitude;
         
-                        // API call to fetch nearby hospitals/clinics
                         fetch("/emergency_assistance/", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "X-CSRFToken": "{{ csrf_token }}",  // CSRF token for Django
+                                "X-CSRFToken": "{{ csrf_token }}",
                             },
                             body: JSON.stringify({
                                 latitude: userLat,
@@ -766,56 +675,6 @@
             }
         }
 
-        // Load and render the 3D model
-        // Load and render the image
-        function loadImage() {
-            const container = document.getElementById('model-container');
-            const scene = new THREE.Scene();
-
-            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setClearColor(0x000000, 0); // Transparent background
-            container.appendChild(renderer.domElement);
-
-            // Add lighting
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 5, 5).normalize();
-            scene.add(light);
-
-            // Create a texture loader
-            const textureLoader = new THREE.TextureLoader();
-            const imageUrl = "{% static 'images/5545023.jpg' %}"; // Replace with your image path
-
-            // Load the image as a texture
-            textureLoader.load(imageUrl, function (texture) {
-                const geometry = new THREE.PlaneGeometry(200, 200); // Adjust size as needed
-                const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-                const imageMesh = new THREE.Mesh(geometry, material);
-
-                // Set the image position
-                imageMesh.position.set(0, 0, 0);
-                scene.add(imageMesh);
-
-                // Adjust camera position
-                camera.position.set(0, 0, 300); // Adjust camera position to fit the image
-                camera.lookAt(0, 0, 0);
-
-                // Animation loop (No rotation, just rendering)
-                function animate() {
-                    requestAnimationFrame(animate);
-                    renderer.render(scene, camera);
-                }
-                animate();
-            }, undefined, function (error) {
-                console.error('Error loading image:', error);
-            });
-        }
-
-        // Initialize the image loader
-        loadImage();
-
         // Function to open the reminder modal
         function openReminderModal() {
             document.getElementById("reminderModal").style.display = "flex";
@@ -829,7 +688,7 @@
         // Function to open the add reminder modal
         function openAddReminderModal() {
             document.getElementById("addReminderModal").style.display = "flex";
-            closeReminderModal(); // Close the reminder modal
+            closeReminderModal();
         }
 
         // Function to close the add reminder modal
@@ -871,4 +730,3 @@
     </script>
 </body>
 </html>
-// changes up to date

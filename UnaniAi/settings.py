@@ -17,12 +17,17 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # settings.py
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Gmail ka SMTP server
-EMAIL_PORT = 587  # TLS encryption ke liye port
-EMAIL_USE_TLS = True  # TLS encryption enable karein
-EMAIL_HOST_USER = 'jahirshaikh162003@gmail.com'  # Apna Gmail address
-EMAIL_HOST_PASSWORD = 'ebwmahjnamuverkg'  # App password (without spaces)
+# # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # Gmail ka SMTP server
+# EMAIL_PORT = 587  # TLS encryption ke liye port
+# EMAIL_USE_TLS = True  # TLS encryption enable karein
+# EMAIL_HOST_USER = 'jahirshaikh162003@gmail.com'  # Apna Gmail address
+# EMAIL_HOST_PASSWORD = 'ebwmahjnamuverkg'  # App password (without spaces)
+EMAIL_HOST = 'live.smtp.mailtrap.io'
+EMAIL_HOST_USER = 'api'
+EMAIL_HOST_PASSWORD = '4ec025717f5bbfae43c1a6538fbaaaaa'
+EMAIL_PORT = '587'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
