@@ -425,3 +425,7 @@ def send_medicine_reminders(request):
             print(f"Error in send_medicine_reminders: {e}")
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
     return JsonResponse({"status": "error", "message": "Invalid request method"}, status=400)
+
+
+
+# ok so setup for minor-changes branch is done ,all set
