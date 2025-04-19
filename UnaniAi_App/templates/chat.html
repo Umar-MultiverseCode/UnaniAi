@@ -224,18 +224,34 @@
             opacity: 1;
         }
 
-        /* Menu button styling */
+        /* Menu button positioning fix */
         .menu-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: rgba(15, 23, 42, 0.7);
-            border: 1px solid rgba(102, 217, 232, 0.3);
-            border-radius: 8px;
-            cursor: pointer;
-            padding: 10px;
-            transition: all 0.3s ease;
+            position: fixed !important;
+            top: 20px !important;
+            left: 20px !important;
+            z-index: 1001 !important;
+            background: rgba(15, 23, 42, 0.8) !important;
+            border: 1px solid rgba(102, 217, 232, 0.3) !important;
+            border-radius: 8px !important;
+            cursor: pointer !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 44px !important;
+            height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Ensure the icon is centered */
+        .menu-btn i {
+            display: block !important;
+            text-align: center !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         .menu-btn:hover {
@@ -912,6 +928,22 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Chat header adjustment to ensure proper layout */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 15px 20px;
+            height: 70px;
+            width: 100%;
+        }
+
+        .model-selector {
+            position: relative;
+            margin-left: 0; /* Remove any left margin */
+        }
     </style>
 </head>
 <body>
@@ -922,7 +954,7 @@
             <div class="chat-header glass">
                 <!-- Menu Button -->
                 <button class="menu-btn" onclick="toggleSidebar()">
-                    <i class="fas fa-bars" style="color: #66d9e8; font-size: 18px;"></i>
+                    <i class="fas fa-bars" style="color: #66d9e8; font-size: 18px; line-height: 1;"></i>
                     <div class="btn-glow"></div>
                 </button>
                 <div class="model-selector">
