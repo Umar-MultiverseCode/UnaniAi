@@ -71,7 +71,7 @@ def create_database():
     print("Database and tables created successfully!")
 create_database()
 
-# Temporary Unani Medicine Database (unchanged)
+# Temporary Tib Medicine Database (unchanged)
 unani_medicines = {
     "cough": {
         "symptoms": ["Dry throat", "Chest congestion", "Difficulty breathing"],
@@ -81,7 +81,7 @@ unani_medicines = {
     # Baaki data same rakha, short kar diya brevity ke liye
 }
 
-# Temporary Unani Ingredients Database (unchanged)
+# Temporary Tib Ingredients Database (unchanged)
 unani_ingredients = []
 
 def populate_unani_ingredients():
@@ -94,7 +94,7 @@ def populate_unani_ingredients():
         ''', (ingredient["ingredient_name"], ingredient["benefits"], ingredient["usage"], ingredient["diseases"]))
     conn.commit()
     conn.close()
-    print("Unani ingredients database populated successfully!")
+    print("Tib ingredients database populated successfully!")
 populate_unani_ingredients()
 
 def get_unani_ingredients(disease):
@@ -122,7 +122,7 @@ def get_unani_ingredients(disease):
 
 def generate_chat_response(user_message):
     """
-    Generates a crisp, table-formatted response for Unani medicine queries with inline CSS.
+    Generates a crisp, table-formatted response for Tib medicine queries with inline CSS.
     Number of remedies varies based on disease severity.
     """
     user_message = user_message.lower().strip()
@@ -137,8 +137,32 @@ def generate_chat_response(user_message):
     greetings = ["hello", "hi", "sala", "assalam"]
     if user_message in greetings:
         return "<p style='color: white; font-style: italic;'>As-salamu alaykum! How can I assist you today?</p>"
+        
+    # 2. Handle identity questions (who/what are you, your name, etc.)
+    identity_questions = ["what is your name", "who are you", "what are you", "your name", "tell me about yourself", "introduce yourself"]
+    if any(question in user_message for question in identity_questions):
+        return "<p style='color: white;'>I am TibAI, your personal Tibb medicine assistant. I'm designed to provide information about traditional Unani medicine, remedies, and treatments based on centuries of healing wisdom. How can I assist you with your health today?</p>"
+    
+    # 3. Handle general medicine requests without specific conditions
+    general_medicine_requests = ["list of medicines", "give me medicines", "show me medicines", "medicine list", "common medicines", "popular medicines", "unani medicines", "tibb medicines"]
+    if any(request in user_message for request in general_medicine_requests):
+        return (f"<h3 style='color: #ffffff;'>Common Unani Medicines</h3>"
+                f"<p style='color: white;'>Here are some widely used medicines in Unani (Tibb) practice:</p>"
+                f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
+                f"<thead><tr style='background-color: white;'>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Medicine</span></th>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Primary Uses</span></th>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Form</span></th>"
+                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Properties</span></th>"
+                f"</tr></thead><tbody style='color: black;'>"
+                f"<tr style='border: 1px solid #ddd; background-color: white;'><td style='padding: 8px;'>Majoon Falasfa</td><td style='padding: 8px;'>Brain and nerve tonic, memory enhancer</td><td style='padding: 8px;'>Herbal jam</td><td style='padding: 8px;'>Improves cognitive functions, relieves stress</td></tr>"
+                f"<tr style='border: 1px solid #ddd; background-color: white;'><td style='padding: 8px;'>Sharbat Unnab</td><td style='padding: 8px;'>Respiratory conditions, fever</td><td style='padding: 8px;'>Syrup</td><td style='padding: 8px;'>Anti-inflammatory, expectorant</td></tr>"
+                f"<tr style='border: 1px solid #ddd; background-color: white;'><td style='padding: 8px;'>Khamira Abresham</td><td style='padding: 8px;'>Heart tonic, anxiety, depression</td><td style='padding: 8px;'>Semi-solid preparation</td><td style='padding: 8px;'>Cardioprotective, calming</td></tr>"
+                f"<tr style='border: 1px solid #ddd; background-color: white;'><td style='padding: 8px;'>Kushta Marwareed</td><td style='padding: 8px;'>General weakness, calcium deficiency</td><td style='padding: 8px;'>Calcined powder</td><td style='padding: 8px;'>Strengthening, immune-boosting</td></tr>"
+                f"</tbody></table>"
+                f"<p style='color: white; font-style: italic;'>These medicines should be taken under the guidance of a qualified Unani practitioner. Indeed, the cure is Allah's will.</p>")
 
-    # 2. Check Known Diseases in unani_medicines
+    # 4. Check Known Diseases in unani_medicines
     words = user_message.split()
     for word in words:
         if word in unani_medicines:
@@ -151,7 +175,7 @@ def generate_chat_response(user_message):
                 response += "".join(f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>" for med in data["medicine"])
             return response
 
-    # 3. Check Unani Ingredients Table (if populated)
+    # 5. Check Tib Ingredients Table (if populated)
     ingredients = get_unani_ingredients(condition)
     if ingredients:
         # Add a brief description about the condition before the table
@@ -174,7 +198,7 @@ def generate_chat_response(user_message):
                 f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
                 f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
-    # 4. Fallback to Gemini API with Dynamic Remedy Count
+    # 6. Fallback to Gemini API with Dynamic Remedy Count
     # Define disease severity levels (example)
     severity_levels = {
         "cold": "mild", "cough": "mild", "fever": "moderate", "flu": "moderate",
@@ -194,11 +218,11 @@ def generate_chat_response(user_message):
             break
 
     prompt = f"""
-    You are an expert in prophetic Unani medicine. Provide a response about '{condition}' in this exact format:
+    You are an expert in prophetic Tib medicine. Provide a response about '{condition}' in this exact format:
 
-    First, write a brief 2-3 sentence explanation about the condition from a Unani medicine perspective. Don't use any markdown formatting, asterisks, or special characters. Write in plain text.
+    First, write a brief 2-3 sentence explanation about the condition from a Tib medicine perspective. Don't use any markdown formatting, asterisks, or special characters. Write in plain text.
 
-    Then, provide exactly {remedy_count} DIFFERENT Unani remedies (do not repeat the same ingredient) in this table format:
+    Then, provide exactly {remedy_count} DIFFERENT Tib remedies (do not repeat the same ingredient) in this table format:
     | Ingredient | Dosage | Benefits | Precautions |
     |------------|--------|----------|-------------|
     | [ingredient name] | [dosage] | [benefits] | [precautions] |
@@ -206,7 +230,7 @@ def generate_chat_response(user_message):
     Make sure each remedy uses a UNIQUE ingredient - do not repeat any ingredients.
     End with "Indeed, the cure is Allah's will."
 
-    If it's not a health query, reply: "I'm here to help with Unani medicine. Ask me about health conditions or treatments."
+    If it's not a health query, reply: "I'm here to help with Tib medicine. Ask me about health conditions or treatments."
     Do not include numbered lists, bullet points, or any special formatting. Keep it clean and simple.
     """
     
@@ -284,9 +308,9 @@ def generate_chat_response(user_message):
                               f"<td style='padding: 8px;'>{parts[2]}</td>"
                               f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
 
-    # 5. Handle Random Queries or Gemini Fallback
+    # 7. Handle Random Queries or Gemini Fallback
     if "I'm here to help" in gemini_response:
-        return "<p style='color: white;'>I'm here to help with Unani medicine. Ask me about health conditions or treatments.</p>"
+        return "<p style='color: white;'>I'm here to help with Tib medicine. Ask me about health conditions or treatments.</p>"
     
     # Final cleanup of description
     description = description.replace("1.", "").replace("2.", "").strip()
@@ -311,18 +335,18 @@ def generate_dynamic_header(condition):
     
     # Create a list of template headers
     templates = [
-        f"Unani Remedies for {condition.capitalize()}",
+        f"Tib Remedies for {condition.capitalize()}",
         f"Natural Treatment: {condition.capitalize()}",
         f"Tibb-e-Nabawi: Healing {condition.capitalize()}",
         f"Traditional Cures for {condition.capitalize()}",
-        f"Healing {condition.capitalize()} with Unani Medicine",
+        f"Healing {condition.capitalize()} with Tib Medicine",
         f"Ancient Wisdom for {condition.capitalize()}",
         f"Prophetic Medicine for {condition.capitalize()}",
-        f"{condition.capitalize()}: Unani Solutions",
+        f"{condition.capitalize()}: Tib Solutions",
         f"Treating {condition.capitalize()} Naturally",
         f"Holistic Approach to {condition.capitalize()}",
         f"{condition.capitalize()}: Balancing the Humors",
-        f"Unani Perspective on {condition.capitalize()}",
+        f"Tib Perspective on {condition.capitalize()}",
         f"Addressing {condition.capitalize()} with Tibb",
         f"{condition.capitalize()}: Nature's Pharmacy",
         f"Time-Tested Remedies for {condition.capitalize()}"
@@ -398,12 +422,12 @@ def remove_markdown_formatting(text):
 def get_condition_description(condition):
     """Get a brief description for common health conditions"""
     descriptions = {
-        "fever": "According to Unani medicine, fever (Humma) is an increase in innate heat that spreads throughout the body through the heart, arteries and blood. It is often associated with an imbalance in the phlegmatic or bilious humors and can be treated with cooling herbs and dietary adjustments.",
-        "cough": "In Unani medicine, cough (Sual) is considered a symptom of disruption in the respiratory system, often due to accumulation of phlegm or irritation in the airways. Traditional treatments focus on balancing the body's moisture and removing excess phlegm.",
-        "headache": "Headaches (Suda) in Unani medicine are attributed to imbalances in blood, phlegm, or bile affecting the head region. Treatment typically involves restoring humoral balance through herbs, dietary changes, and sometimes cupping therapy.",
-        "cold": "The common cold (Nazla) in Unani medicine is viewed as an accumulation of cold humors in the respiratory system. Treatment aims to restore warmth and eliminate excess phlegm through warming herbs and proper dietary regimen.",
-        "piles": "Piles (Bawaseer) in Unani medicine are attributed to an excess of black bile or blood in the rectal veins. Traditional treatments focus on cooling the blood, improving bowel movements, and reducing inflammation through herbs and dietary modifications.",
-        "constipation": "Constipation (Qabz) in Unani medicine is considered a result of dryness in the intestines or weakness in the expulsive faculty. Treatment includes moistening herbs, dietary adjustments, and sometimes gentle laxatives to restore normal bowel function."
+        "fever": "According to Tib medicine, fever (Humma) is an increase in innate heat that spreads throughout the body through the heart, arteries and blood. It is often associated with an imbalance in the phlegmatic or bilious humors and can be treated with cooling herbs and dietary adjustments.",
+        "cough": "In Tib medicine, cough (Sual) is considered a symptom of disruption in the respiratory system, often due to accumulation of phlegm or irritation in the airways. Traditional treatments focus on balancing the body's moisture and removing excess phlegm.",
+        "headache": "Headaches (Suda) in Tib medicine are attributed to imbalances in blood, phlegm, or bile affecting the head region. Treatment typically involves restoring humoral balance through herbs, dietary changes, and sometimes cupping therapy.",
+        "cold": "The common cold (Nazla) in Tib medicine is viewed as an accumulation of cold humors in the respiratory system. Treatment aims to restore warmth and eliminate excess phlegm through warming herbs and proper dietary regimen.",
+        "piles": "Piles (Bawaseer) in Tib medicine are attributed to an excess of black bile or blood in the rectal veins. Traditional treatments focus on cooling the blood, improving bowel movements, and reducing inflammation through herbs and dietary modifications.",
+        "constipation": "Constipation (Qabz) in Tib medicine is considered a result of dryness in the intestines or weakness in the expulsive faculty. Treatment includes moistening herbs, dietary adjustments, and sometimes gentle laxatives to restore normal bowel function."
     }
     
     # Check for exact matches first
@@ -416,7 +440,7 @@ def get_condition_description(condition):
             return desc
     
     # Default description for unknown conditions
-    return f"In Unani medicine, health conditions like {condition} are typically approached by understanding the imbalance in bodily humors (Akhlaat) and temperament (Mizaj). Treatment focuses on restoring balance through natural remedies, dietary adjustments, and lifestyle modifications."
+    return f"In Tib medicine, health conditions like {condition} are typically approached by understanding the imbalance in bodily humors (Akhlaat) and temperament (Mizaj). Treatment focuses on restoring balance through natural remedies, dietary adjustments, and lifestyle modifications."
 
 def index(request):
     return render(request, 'index.html')
@@ -533,7 +557,7 @@ def emergency_assistance(request):
             data = json.loads(request.body)
             user_lat = data.get("latitude")
             user_lon = data.get("longitude")
-            url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={user_lat},{user_lon}&radius=5000&type=hospital&keyword=Unani&key={GOOGLE_PLACES_API_KEY}"
+            url = f"https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={user_lat},{user_lon}&radius=5000&type=hospital&keyword=Tib&key={GOOGLE_PLACES_API_KEY}"
             response = requests.get(url)
             places_data = response.json()
             facilities = [
