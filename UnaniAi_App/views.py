@@ -9,6 +9,7 @@ import google.generativeai as genai
 from datetime import datetime
 import requests
 import time
+import random
 
 # Gemini API Setup
 genai.configure(api_key="AIzaSyCnLkFs3-8aufez4jPpQFnahj4ropCNBfg")
@@ -106,7 +107,18 @@ def get_unani_ingredients(disease):
     ''', (f"%{disease}%",))
     ingredients = cursor.fetchall()
     conn.close()
-    return ingredients
+    
+    # Return only unique ingredients to prevent duplication
+    seen = set()
+    unique_ingredients = []
+    for ingredient in ingredients:
+        # Create a unique key based on ingredient name
+        key = ingredient[0].lower().strip()
+        if key not in seen:
+            seen.add(key)
+            unique_ingredients.append(ingredient)
+    
+    return unique_ingredients
 
 def generate_chat_response(user_message):
     """
@@ -115,6 +127,12 @@ def generate_chat_response(user_message):
     """
     user_message = user_message.lower().strip()
 
+    # Extract actual condition/topic from the message
+    condition = extract_condition(user_message)
+    
+    # Generate a unique header for this condition
+    response_header = generate_dynamic_header(condition)
+    
     # 1. Handle Pure Greetings
     greetings = ["hello", "hi", "sala", "assalam"]
     if user_message in greetings:
@@ -125,7 +143,7 @@ def generate_chat_response(user_message):
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
-            response = f"<h3 style='color: white;'>Unani for {word.capitalize()}</h3>"
+            response = f"<h3 style='color: white;'>{response_header}</h3>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>"
             if data.get("medicine"):
@@ -134,8 +152,11 @@ def generate_chat_response(user_message):
             return response
 
     # 3. Check Unani Ingredients Table (if populated)
-    ingredients = get_unani_ingredients(user_message)
+    ingredients = get_unani_ingredients(condition)
     if ingredients:
+        # Add a brief description about the condition before the table
+        description = get_condition_description(condition)
+        
         table_rows = "".join(
             f"<tr style='border: 1px solid #ddd; background-color: white;'>"
             f"<td style='padding: 8px;'>{ing[0]}</td>"
@@ -143,7 +164,8 @@ def generate_chat_response(user_message):
             f"<td style='padding: 8px;'>{ing[2]}</td>"
             f"</tr>" for ing in ingredients
         )
-        return (f"<h3 style='color: #ffffff;'>Ingredients for {user_message.capitalize()}</h3>"
+        return (f"<h3 style='color: #ffffff;'>{response_header}</h3>"
+                f"<p style='color: white;'>{description}</p>"
                 f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
                 f"<thead><tr style='background-color: white;'>"
                 f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
@@ -172,33 +194,106 @@ def generate_chat_response(user_message):
             break
 
     prompt = f"""
-    You are an expert in prophetic Unani medicine. Answer in short, crisp sentences based only on Islamic Unani principles.
-    User query: "{user_message}". If it’s a disease or health issue:
-    - Suggest exactly {remedy_count} prophetic Unani remedies in this table format:
-    | Ingredient | Dosage         | Benefits             | Precautions         |
-    |------------|----------------|----------------------|---------------------|
-    | [Name]     | [Dosage]       | [Short benefit]      | [Short precaution]  |
-    - End with "Indeed, the cure is Allah's will."
-    If it’s a random query (e.g., "how are you", "tell me a joke"), reply: "I’m here to help with Unani medicine. Ask me anything!"
+    You are an expert in prophetic Unani medicine. Provide a response about '{condition}' in this exact format:
+
+    First, write a brief 2-3 sentence explanation about the condition from a Unani medicine perspective. Don't use any markdown formatting, asterisks, or special characters. Write in plain text.
+
+    Then, provide exactly {remedy_count} DIFFERENT Unani remedies (do not repeat the same ingredient) in this table format:
+    | Ingredient | Dosage | Benefits | Precautions |
+    |------------|--------|----------|-------------|
+    | [ingredient name] | [dosage] | [benefits] | [precautions] |
+
+    Make sure each remedy uses a UNIQUE ingredient - do not repeat any ingredients.
+    End with "Indeed, the cure is Allah's will."
+
+    If it's not a health query, reply: "I'm here to help with Unani medicine. Ask me about health conditions or treatments."
+    Do not include numbered lists, bullet points, or any special formatting. Keep it clean and simple.
     """
+    
     gemini_response = model.generate_content(prompt).text.strip()
+    
+    # Clean up response
+    gemini_response = clean_response_text(gemini_response)
+    
+    # Extract the description and table parts
+    description = ""
+    table_content = ""
+    table_start_index = -1
+    
+    # Look for the table marker
+    table_markers = ["| Ingredient |", "Ingredient\tDosage"]
     lines = gemini_response.split('\n')
+    
+    for i, line in enumerate(lines):
+        for marker in table_markers:
+            if marker in line:
+                table_start_index = i
+                break
+        if table_start_index >= 0:
+            break
+    
+    # If we found a table, separate description and table
+    if table_start_index > 0:
+        description = '\n'.join(lines[:table_start_index]).strip()
+        table_content = '\n'.join(lines[table_start_index:]).strip()
+    else:
+        description = gemini_response
+    
+    # Remove any remaining numbered list formatting or table headers from description
+    description = re.sub(r'^\d+\.\s+', '', description, flags=re.MULTILINE)  # Remove "1. " style numbering
+    description = re.sub(r'\|.*?\|.*?\|.*?\|.*?\|', '', description)  # Remove any table header in description
+    
+    # Parse table rows
     table_rows = ""
+    in_table = False
+    header_found = False
+    
     for line in lines:
-        if line.startswith('|') and not line.startswith('| Ingredient') and not line.startswith('|---'):
+        # Skip empty lines
+        if not line.strip():
+            continue
+            
+        # Check if we're entering the table section
+        if any(marker in line for marker in table_markers):
+            in_table = True
+            header_found = True
+            continue
+        
+        # Skip the divider line
+        if in_table and "|--" in line:
+            continue
+            
+        # Process table rows
+        if in_table and "|" in line and header_found:
+            # Process proper table format
             parts = [part.strip() for part in line.split('|')[1:-1]]
             if len(parts) == 4:
                 table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
-                               f"<td style='padding: 8px;'>{parts[0]}</td>"
-                               f"<td style='padding: 8px;'>{parts[1]}</td>"
-                               f"<td style='padding: 8px;'>{parts[2]}</td>"
-                               f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
+                              f"<td style='padding: 8px;'>{parts[0]}</td>"
+                              f"<td style='padding: 8px;'>{parts[1]}</td>"
+                              f"<td style='padding: 8px;'>{parts[2]}</td>"
+                              f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
+        
+        # Handle tab-separated format as fallback
+        elif in_table and "\t" in line and header_found:
+            parts = [part.strip() for part in line.split('\t')]
+            if len(parts) >= 4:
+                table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
+                              f"<td style='padding: 8px;'>{parts[0]}</td>"
+                              f"<td style='padding: 8px;'>{parts[1]}</td>"
+                              f"<td style='padding: 8px;'>{parts[2]}</td>"
+                              f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
 
     # 5. Handle Random Queries or Gemini Fallback
-    if "I’m here to help" in gemini_response:
-        return "<p style='color: white;'>I’m here to help with Unani medicine. Ask me anything!</p>"
+    if "I'm here to help" in gemini_response:
+        return "<p style='color: white;'>I'm here to help with Unani medicine. Ask me about health conditions or treatments.</p>"
     
-    return (f"<h3 style='color: #ffffff;'>{user_message.capitalize()}</h3>"
+    # Final cleanup of description
+    description = description.replace("1.", "").replace("2.", "").strip()
+    description = re.sub(r'\s+', ' ', description)  # Replace multiple spaces with a single space
+    
+    return (f"<h3 style='color: #ffffff;'>{response_header}</h3>"
+            f"<p style='color: white;'>{description}</p>"
             f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
             f"<thead><tr style='background-color: white;'>"
             f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
@@ -207,6 +302,121 @@ def generate_chat_response(user_message):
             f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Precautions</span></th>"
             f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
             f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
+
+def generate_dynamic_header(condition):
+    """Generate varied and unique headers for each condition"""
+    # Use current timestamp to create variation even for the same condition
+    seed = int(time.time()) % 100
+    random.seed(seed)
+    
+    # Create a list of template headers
+    templates = [
+        f"Unani Remedies for {condition.capitalize()}",
+        f"Natural Treatment: {condition.capitalize()}",
+        f"Tibb-e-Nabawi: Healing {condition.capitalize()}",
+        f"Traditional Cures for {condition.capitalize()}",
+        f"Healing {condition.capitalize()} with Unani Medicine",
+        f"Ancient Wisdom for {condition.capitalize()}",
+        f"Prophetic Medicine for {condition.capitalize()}",
+        f"{condition.capitalize()}: Unani Solutions",
+        f"Treating {condition.capitalize()} Naturally",
+        f"Holistic Approach to {condition.capitalize()}",
+        f"{condition.capitalize()}: Balancing the Humors",
+        f"Unani Perspective on {condition.capitalize()}",
+        f"Addressing {condition.capitalize()} with Tibb",
+        f"{condition.capitalize()}: Nature's Pharmacy",
+        f"Time-Tested Remedies for {condition.capitalize()}"
+    ]
+    
+    # Choose a random template
+    return random.choice(templates)
+
+def extract_condition(user_message):
+    """Extract the actual health condition from the user message"""
+    # Common prefixes to remove
+    prefixes = [
+        "i have", "i am suffering from", "i am experiencing", "i feel", 
+        "what about", "how to treat", "how to cure", "how to handle",
+        "treatment for", "cure for", "remedy for", "what is", "tell me about"
+    ]
+    
+    # Convert to lowercase and strip
+    message = user_message.lower().strip()
+    
+    # Remove common prefixes
+    for prefix in prefixes:
+        if message.startswith(prefix):
+            message = message[len(prefix):].strip()
+            break
+    
+    # Check for common suffixes to remove
+    suffixes = [" problem", " issues", " symptoms", " condition", " disease", " disorder"]
+    for suffix in suffixes:
+        if message.endswith(suffix):
+            message = message[:-len(suffix)].strip()
+    
+    # Handle specific conditions or variations
+    condition_map = {
+        "gas": "gas",
+        "acidity": "acidity",
+        "gastric": "gastric problem",
+        "pain in stomach": "stomach pain",
+        "pain in head": "headache",
+        "throat pain": "sore throat"
+    }
+    
+    # Check if our cleaned message maps to a known condition
+    for key, value in condition_map.items():
+        if key in message:
+            return value
+    
+    return message  # Return the cleaned message
+
+def clean_response_text(text):
+    """Clean up the response text to remove markdown and formatting."""
+    # Remove markdown formatting and special characters
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)  # Remove bold
+    text = re.sub(r'\*(.*?)\*', r'\1', text)      # Remove italic
+    text = re.sub(r'_(.*?)_', r'\1', text)        # Remove underline
+    text = re.sub(r'`(.*?)`', r'\1', text)        # Remove code
+    
+    # Remove list markers
+    text = re.sub(r'^\s*[\*\-\+]\s+', '', text, flags=re.MULTILINE)
+    
+    # Clean up extra spaces and newlines
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    return text
+
+def remove_markdown_formatting(text):
+    """Remove markdown formatting from text."""
+    text = re.sub(r'(\*\*|\*|__|_|`)(.*?)\1', r'\2', text)
+    text = re.sub(r'^\s*[\*\-\+]\s*', '', text, flags=re.MULTILINE)
+    text = re.sub(r'\n\s*\n', '\n', text).strip()
+    return text
+
+def get_condition_description(condition):
+    """Get a brief description for common health conditions"""
+    descriptions = {
+        "fever": "According to Unani medicine, fever (Humma) is an increase in innate heat that spreads throughout the body through the heart, arteries and blood. It is often associated with an imbalance in the phlegmatic or bilious humors and can be treated with cooling herbs and dietary adjustments.",
+        "cough": "In Unani medicine, cough (Sual) is considered a symptom of disruption in the respiratory system, often due to accumulation of phlegm or irritation in the airways. Traditional treatments focus on balancing the body's moisture and removing excess phlegm.",
+        "headache": "Headaches (Suda) in Unani medicine are attributed to imbalances in blood, phlegm, or bile affecting the head region. Treatment typically involves restoring humoral balance through herbs, dietary changes, and sometimes cupping therapy.",
+        "cold": "The common cold (Nazla) in Unani medicine is viewed as an accumulation of cold humors in the respiratory system. Treatment aims to restore warmth and eliminate excess phlegm through warming herbs and proper dietary regimen.",
+        "piles": "Piles (Bawaseer) in Unani medicine are attributed to an excess of black bile or blood in the rectal veins. Traditional treatments focus on cooling the blood, improving bowel movements, and reducing inflammation through herbs and dietary modifications.",
+        "constipation": "Constipation (Qabz) in Unani medicine is considered a result of dryness in the intestines or weakness in the expulsive faculty. Treatment includes moistening herbs, dietary adjustments, and sometimes gentle laxatives to restore normal bowel function."
+    }
+    
+    # Check for exact matches first
+    if condition in descriptions:
+        return descriptions[condition]
+    
+    # Check for partial matches
+    for key, desc in descriptions.items():
+        if key in condition or condition in key:
+            return desc
+    
+    # Default description for unknown conditions
+    return f"In Unani medicine, health conditions like {condition} are typically approached by understanding the imbalance in bodily humors (Akhlaat) and temperament (Mizaj). Treatment focuses on restoring balance through natural remedies, dietary adjustments, and lifestyle modifications."
 
 def index(request):
     return render(request, 'index.html')
@@ -263,12 +473,6 @@ def login(request):
         finally:
             conn.close()
     return render(request, 'login.html')
-
-def remove_markdown_formatting(text):
-    text = re.sub(r'(\*\*|\*|__|_)(.*?)\1', r'\2', text)
-    text = re.sub(r'^\s*[\*\-]\s*', '', text, flags=re.MULTILINE)
-    text = re.sub(r'\n\s*\n', '\n', text).strip()
-    return text
 
 def get_conversation_history(user_id):
     conn = sqlite3.connect('signup.db')
