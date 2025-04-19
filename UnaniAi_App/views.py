@@ -118,12 +118,107 @@ def get_unani_ingredients(disease):
             seen.add(key)
             unique_ingredients.append(ingredient)
     
+    # If we have fewer than 3 ingredients, call Gemini to generate more
+    if len(unique_ingredients) < 3:
+        # Generate additional ingredients using Gemini API
+        additional_ingredients = generate_additional_ingredients(disease, 3 - len(unique_ingredients))
+        for ing in additional_ingredients:
+            unique_ingredients.append(ing)
+    
     return unique_ingredients
+
+def generate_additional_ingredients(condition, count):
+    """Generate additional ingredients for a condition when database has insufficient entries"""
+    prompt = f"""
+    You are an expert in Tib medicine (Unani). I need exactly {count} more unique ingredients/remedies for treating '{condition}'.
+    For each ingredient, provide:
+    1. The ingredient name (use common traditional Unani ingredients)
+    2. The benefits (2-3 specific benefits directly related to treating {condition})
+    3. How to use it (specific dosage and usage instructions)
+    
+    Format your response strictly as follows (one ingredient per line, with pipe separators, no numbering):
+    Ingredient Name | Specific benefits for {condition} | Detailed usage instructions with dosage
+    
+    For example:
+    Black Seed | Reduces inflammation, boosts immunity | Take 1/2 teaspoon with honey twice daily
+    
+    Do not include any explanations, bullet points, or other text. Just provide exactly {count} ingredients in the format shown.
+    """
+    
+    try:
+        gemini_response = model.generate_content(prompt).text.strip()
+        
+        # Process the response into the right format
+        ingredients = []
+        lines = gemini_response.split('\n')
+        
+        for line in lines:
+            # Skip empty lines and headers
+            if not line.strip() or "Ingredient" in line and "Benefits" in line and "Usage" in line:
+                continue
+                
+            # Handle pipe-separated format (preferred)
+            if "|" in line:
+                parts = [part.strip() for part in line.split('|')]
+                if len(parts) >= 3:
+                    ingredients.append((parts[0], parts[1], parts[2]))
+            
+            # Alternative format handling
+            elif ":" in line:
+                # Try to parse formats like "Ingredient: Benefits - Usage"
+                try:
+                    ingredient = line.split(':', 1)[0].strip()
+                    rest = line.split(':', 1)[1].strip()
+                    
+                    # Check for dash separator
+                    if '-' in rest:
+                        benefits, usage = rest.split('-', 1)
+                        ingredients.append((ingredient, benefits.strip(), usage.strip()))
+                    # If no dash, try to split by sentence
+                    else:
+                        sentences = re.split(r'(?<=[.!?])\s+', rest)
+                        if len(sentences) >= 2:
+                            benefits = sentences[0]
+                            usage = ' '.join(sentences[1:])
+                            ingredients.append((ingredient, benefits, usage))
+                except:
+                    # Skip if parsing fails
+                    continue
+        
+        # If we still don't have enough ingredients, fill with defaults
+        if len(ingredients) < count:
+            default_ingredients = [
+                ("Honey", "Natural antibiotic, soothes inflammation, alleviates symptoms", "Take 1 teaspoon with warm water thrice daily"),
+                ("Ginger", "Anti-inflammatory, improves circulation, reduces congestion", "Steep sliced ginger in hot water for 10 minutes, drink 3 cups daily"),
+                ("Black Seed", "Boosts immunity, reduces inflammation, relieves symptoms", "Take 1/2 teaspoon with honey twice daily"),
+                ("Olive Oil", "Soothes irritation, anti-inflammatory, lubricates throat", "Take 1 teaspoon with a pinch of turmeric twice daily"),
+                ("Licorice Root", "Soothes throat, reduces inflammation, expectorant", "Prepare as tea using 1-2 grams of root, drink twice daily")
+            ]
+            
+            # Add only the needed number of default ingredients
+            needed = count - len(ingredients)
+            for i in range(min(needed, len(default_ingredients))):
+                if default_ingredients[i][0].lower() not in [ing[0].lower() for ing in ingredients]:
+                    ingredients.append(default_ingredients[i])
+        
+        # Return only the number we need
+        return ingredients[:count]
+    except Exception as e:
+        print(f"Error generating additional ingredients: {e}")
+        # Fallback default ingredients if API fails
+        default_ingredients = [
+            ("Honey", "Natural antibiotic, soothes inflammation, alleviates symptoms", "Take 1 teaspoon with warm water thrice daily"),
+            ("Ginger", "Anti-inflammatory, improves circulation, reduces congestion", "Steep sliced ginger in hot water for 10 minutes, drink 3 cups daily"),
+            ("Black Seed", "Boosts immunity, reduces inflammation, relieves symptoms", "Take 1/2 teaspoon with honey twice daily"),
+            ("Olive Oil", "Soothes irritation, anti-inflammatory, lubricates throat", "Take 1 teaspoon with a pinch of turmeric twice daily"),
+            ("Licorice Root", "Soothes throat, reduces inflammation, expectorant", "Prepare as tea using 1-2 grams of root, drink twice daily")
+        ]
+        return default_ingredients[:count]
 
 def generate_chat_response(user_message):
     """
     Generates a crisp, table-formatted response for Tib medicine queries with inline CSS.
-    Number of remedies varies based on disease severity.
+    Ensures a minimum of 3 remedies for all conditions.
     """
     user_message = user_message.lower().strip()
 
@@ -138,12 +233,12 @@ def generate_chat_response(user_message):
     if user_message in greetings:
         return "<p style='color: white; font-style: italic;'>As-salamu alaykum! How can I assist you today?</p>"
         
-    # 2. Handle identity questions (who/what are you, your name, etc.)
+    # 2. Handle identity questions
     identity_questions = ["what is your name", "who are you", "what are you", "your name", "tell me about yourself", "introduce yourself"]
     if any(question in user_message for question in identity_questions):
         return "<p style='color: white;'>I am TibAI, your personal Tibb medicine assistant. I'm designed to provide information about traditional Unani medicine, remedies, and treatments based on centuries of healing wisdom. How can I assist you with your health today?</p>"
     
-    # 3. Handle general medicine requests without specific conditions
+    # 3. Handle general medicine requests
     general_medicine_requests = ["list of medicines", "give me medicines", "show me medicines", "medicine list", "common medicines", "popular medicines", "unani medicines", "tibb medicines"]
     if any(request in user_message for request in general_medicine_requests):
         return (f"<h3 style='color: #ffffff;'>Common Unani Medicines</h3>"
@@ -167,35 +262,64 @@ def generate_chat_response(user_message):
     for word in words:
         if word in unani_medicines:
             data = unani_medicines[word]
+            # Ensure we have a minimum of 3 medicines/treatments
+            if len(data.get('treatment', [])) < 3:
+                # Generate additional treatments if needed
+                additional_treatments = generate_additional_ingredients(word, 3 - len(data.get('treatment', [])))
+                for treatment in additional_treatments:
+                    data['treatment'].append(f"Use {treatment[0]}: {treatment[2]}")
+                
             response = f"<h3 style='color: white;'>{response_header}</h3>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Symptoms:</strong> {', '.join(data['symptoms'])}</p>"
             response += f"<p style='color: white;'><strong style='color: #ffcc00;'>Treatment:</strong> {', '.join(data['treatment'])}</p>"
+            
+            # Build medicine table if available
             if data.get("medicine"):
-                response += "<h4 style='color: #ffcc00;'>Medicines:</h4>"
-                response += "".join(f"<p><a href='{med['link']}'>{med['name']}</a> - ₹{med['price']}</p>" for med in data["medicine"])
+                response += "<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
+                response += "<thead><tr style='background-color: white;'>"
+                response += "<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Medicine</span></th>"
+                response += "<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Price</span></th>"
+                response += "</tr></thead><tbody style='color: black;'>"
+                
+                for med in data["medicine"]:
+                    response += f"<tr style='border: 1px solid #ddd; background-color: white;'>"
+                    response += f"<td style='padding: 8px;'><a href='{med['link']}'>{med['name']}</a></td>"
+                    response += f"<td style='padding: 8px;'>₹{med['price']}</td></tr>"
+                
+                response += "</tbody></table>"
+            
+            response += "<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>"
             return response
 
     # 5. Check Tib Ingredients Table (if populated)
     ingredients = get_unani_ingredients(condition)
     if ingredients:
+        # Ensure we have at least 3 ingredients
+        if len(ingredients) < 3:
+            # This should never happen now with our get_unani_ingredients function update
+            # but keeping as a fallback
+            additional_count = 3 - len(ingredients)
+            additional_ingredients = generate_additional_ingredients(condition, additional_count)
+            ingredients.extend(additional_ingredients)
+            
         # Add a brief description about the condition before the table
         description = get_condition_description(condition)
         
         table_rows = "".join(
             f"<tr style='border: 1px solid #ddd; background-color: white;'>"
-            f"<td style='padding: 8px;'>{ing[0]}</td>"
-            f"<td style='padding: 8px;'>{ing[1]}</td>"
-            f"<td style='padding: 8px;'>{ing[2]}</td>"
+            f"<td style='padding: 8px; color: black;'>{ing[0]}</td>"
+            f"<td style='padding: 8px; color: black;'>{ing[1]}</td>"
+            f"<td style='padding: 8px; color: black;'>{ing[2]}</td>"
             f"</tr>" for ing in ingredients
         )
         return (f"<h3 style='color: #ffffff;'>{response_header}</h3>"
                 f"<p style='color: white;'>{description}</p>"
                 f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
                 f"<thead><tr style='background-color: white;'>"
-                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
-                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Benefits</span></th>"
-                f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Usage</span></th>"
-                f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
+                f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Ingredient</th>"
+                f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Benefits</th>"
+                f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Usage</th>"
+                f"</tr></thead><tbody>{table_rows}</tbody></table>"
                 f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
     # 6. Fallback to Gemini API with Dynamic Remedy Count
@@ -206,7 +330,7 @@ def generate_chat_response(user_message):
     }
     
     # Determine severity and remedy count
-    remedy_count = 3  # Default for mild or unknown
+    remedy_count = 3  # Default minimum for mild or unknown
     for word in words:
         if word in severity_levels:
             if severity_levels[word] == "mild":
@@ -218,7 +342,7 @@ def generate_chat_response(user_message):
             break
 
     prompt = f"""
-    You are an expert in prophetic Tib medicine. Provide a response about '{condition}' in this exact format:
+    You are an expert in Tib medicine (Unani medicine). Provide a response about '{condition}' in this exact format:
 
     First, write a brief 2-3 sentence explanation about the condition from a Tib medicine perspective. Don't use any markdown formatting, asterisks, or special characters. Write in plain text.
 
@@ -293,20 +417,20 @@ def generate_chat_response(user_message):
             parts = [part.strip() for part in line.split('|')[1:-1]]
             if len(parts) == 4:
                 table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
-                              f"<td style='padding: 8px;'>{parts[0]}</td>"
-                              f"<td style='padding: 8px;'>{parts[1]}</td>"
-                              f"<td style='padding: 8px;'>{parts[2]}</td>"
-                              f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
+                              f"<td style='padding: 8px; color: black;'>{parts[0]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[1]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[2]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[3]}</td></tr>")
         
         # Handle tab-separated format as fallback
         elif in_table and "\t" in line and header_found:
             parts = [part.strip() for part in line.split('\t')]
             if len(parts) >= 4:
                 table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
-                              f"<td style='padding: 8px;'>{parts[0]}</td>"
-                              f"<td style='padding: 8px;'>{parts[1]}</td>"
-                              f"<td style='padding: 8px;'>{parts[2]}</td>"
-                              f"<td style='padding: 8px;'>{parts[3]}</td></tr>")
+                              f"<td style='padding: 8px; color: black;'>{parts[0]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[1]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[2]}</td>"
+                              f"<td style='padding: 8px; color: black;'>{parts[3]}</td></tr>")
 
     # 7. Handle Random Queries or Gemini Fallback
     if "I'm here to help" in gemini_response:
@@ -316,15 +440,26 @@ def generate_chat_response(user_message):
     description = description.replace("1.", "").replace("2.", "").strip()
     description = re.sub(r'\s+', ' ', description)  # Replace multiple spaces with a single space
     
+    # Check if we have enough rows - if not, generate some
+    if table_rows.count("<tr") < 3:
+        # Generate additional ingredients
+        additional_ingredients = generate_additional_ingredients(condition, 3 - table_rows.count("<tr"))
+        for ing in additional_ingredients:
+            table_rows += (f"<tr style='border: 1px solid #ddd; background-color: white;'>"
+                          f"<td style='padding: 8px; color: black;'>{ing[0]}</td>"
+                          f"<td style='padding: 8px; color: black;'>Appropriate dosage</td>"
+                          f"<td style='padding: 8px; color: black;'>{ing[1]}</td>"
+                          f"<td style='padding: 8px; color: black;'>Consult a Tib practitioner for individual guidance</td></tr>")
+    
     return (f"<h3 style='color: #ffffff;'>{response_header}</h3>"
             f"<p style='color: white;'>{description}</p>"
             f"<table style='width: 100%; border-collapse: collapse; margin: 10px 0;'>"
             f"<thead><tr style='background-color: white;'>"
-            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Ingredient</span></th>"
-            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Dosage</span></th>"
-            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Benefits</span></th>"
-            f"<th style='border: 1px solid #000; padding: 8px;'><span style='color: black;'>Precautions</span></th>"
-            f"</tr></thead><tbody style='color: black;'>{table_rows}</tbody></table>"
+            f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Ingredient</th>"
+            f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Dosage</th>"
+            f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Benefits</th>"
+            f"<th style='border: 1px solid #000; padding: 8px; color: black;'>Precautions</th>"
+            f"</tr></thead><tbody>{table_rows}</tbody></table>"
             f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
 def generate_dynamic_header(condition):
