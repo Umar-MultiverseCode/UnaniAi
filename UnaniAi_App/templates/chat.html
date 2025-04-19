@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Add FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Add this CSS for the table */
         table {
@@ -90,51 +92,156 @@
         .sidebar {
             position: fixed;
             top: 0;
-            left: -300px; /* Initially hidden */
+            left: -350px; /* Start further off-screen */
             width: 300px;
             height: 100%;
-            background: rgba(15, 23, 42, 0.7); /* Changed from rgba(255, 255, 255, 0.1) to match theme */
+            background: rgba(15, 23, 42, 0.95); /* Even darker for better contrast */
             backdrop-filter: blur(10px);
-            transition: left 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Smooth bounce effect */
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(102, 217, 232, 0.2);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+            transform: translateX(0);
         }
 
         .sidebar.open {
-            left: 0; /* Show sidebar */
+            left: 0;
+            transform: translateX(0);
         }
 
         .sidebar-header {
             padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(102, 217, 232, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            color: #66d9e8;
+            font-weight: 700;
+            text-shadow: 0 0 5px rgba(102, 217, 232, 0.5);
+            font-size: 28px;
+            letter-spacing: 1px;
         }
 
         .sidebar-content {
-            padding: 20px;
+            padding: 25px;
             flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .sidebar-footer {
             padding: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(102, 217, 232, 0.2);
             text-align: center;
         }
 
-        .close-sidebar-btn {
-            width: 50%;
-            /* background-color: yellow; */
+        /* Improved button styling */
+        .sidebar-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 217, 232, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
+        /* Apply the improved button class to all sidebar buttons */
+        .history-btn, .emergency-btn, .reminder-btn, .logout-btn, .close-sidebar-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 217, 232, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .history-btn:hover, .emergency-btn:hover, .reminder-btn:hover, .logout-btn:hover, .close-sidebar-btn:hover {
+            background: rgba(102, 217, 232, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-color: rgba(102, 217, 232, 0.5);
+        }
+
+        .history-btn span, .emergency-btn span, .reminder-btn span, .logout-btn span, .close-sidebar-btn span {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 16px;
+            z-index: 1;
+            position: relative;
+            letter-spacing: 0.5px;
+        }
+
+        /* Add icons to buttons */
+        .btn-icon {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        /* Glow effect for buttons */
+        .btn-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(102, 217, 232, 0.2), rgba(166, 139, 250, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 8px;
+        }
+
+        .history-btn:hover .btn-glow, 
+        .emergency-btn:hover .btn-glow, 
+        .reminder-btn:hover .btn-glow, 
+        .logout-btn:hover .btn-glow, 
+        .close-sidebar-btn:hover .btn-glow {
+            opacity: 1;
+        }
+
+        /* Menu button styling */
         .menu-btn {
             position: absolute;
             top: 20px;
             left: 20px;
             z-index: 1001;
-            background: none;
-            border: none;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(102, 217, 232, 0.3);
+            border-radius: 8px;
             cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background: rgba(102, 217, 232, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px rgba(102, 217, 232, 0.5);
         }
 
         .menu-btn.hide {
@@ -149,11 +256,16 @@
         }
 
         .hamburger-icon span {
-            width: 30px;
-            height: 3px;
+            width: 25px;
+            height: 2px;
             background: linear-gradient(135deg, #66d9e8 0%, #6096fd 50%, #a78bfa 100%);
             border-radius: 2px;
             box-shadow: 0 0 3px rgba(102, 217, 232, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover .hamburger-icon span {
+            box-shadow: 0 0 8px rgba(102, 217, 232, 0.8);
         }
 
         /* Blank window styles */
@@ -780,6 +892,26 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
             background: rgba(15, 23, 42, 0.7); /* Slightly more opaque for better readability */
         }
+
+        /* Sidebar overlay backdrop */
+        .sidebar-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .sidebar-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -789,12 +921,8 @@
         <main class="chat-main">
             <div class="chat-header glass">
                 <!-- Menu Button -->
-                <button class="menu-btn glass" onclick="toggleSidebar()">
-                    <div class="hamburger-icon">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
+                <button class="menu-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-bars" style="color: #66d9e8; font-size: 18px;"></i>
                     <div class="btn-glow"></div>
                 </button>
                 <div class="model-selector">
@@ -842,32 +970,40 @@
             </div>
         </main>
 
+        <!-- Add a backdrop for the sidebar -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
-        <div class="sidebar glass" id="sidebar">
+        <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>Menu</h2>
+                <h2>TibAI Menu</h2>
             </div>
             <div class="sidebar-content">
-                <button class="history-btn glass" onclick="toggleHistory()">
-                    <span>History</span>
+                <button class="history-btn" onclick="toggleHistory()">
+                    <i class="fas fa-history btn-icon"></i>
+                    <span>Chat History</span>
                     <div class="btn-glow"></div>
                 </button>
-                <button class="emergency-btn glass" onclick="handleEmergency()">
+                <button class="emergency-btn" onclick="handleEmergency()">
+                    <i class="fas fa-ambulance btn-icon"></i>
                     <span>Emergency</span>
                     <div class="btn-glow"></div>
                 </button>
-                <button class="reminder-btn glass" onclick="openReminderModal()">
-                    <span>Reminder</span>
+                <button class="reminder-btn" onclick="openReminderModal()">
+                    <i class="fas fa-bell btn-icon"></i>
+                    <span>Medicine Reminder</span>
                     <div class="btn-glow"></div>
                 </button>
-                <button class="logout-btn glass" onclick="logout()">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt btn-icon"></i>
                     <span>Logout</span>
                     <div class="btn-glow"></div>
                 </button>
             </div>
             <div class="sidebar-footer">
-                <button class="close-sidebar-btn glass" onclick="toggleSidebar()">
-                    <span>Close</span>
+                <button class="close-sidebar-btn" onclick="toggleSidebar()">
+                    <i class="fas fa-times btn-icon"></i>
+                    <span>Close Menu</span>
                     <div class="btn-glow"></div>
                 </button>
             </div>
@@ -1163,8 +1299,10 @@
         function toggleSidebar() {
             const sidebar = document.getElementById("sidebar");
             const menuBtn = document.querySelector(".menu-btn");
+            const backdrop = document.getElementById("sidebar-backdrop");
             sidebar.classList.toggle("open");
             menuBtn.classList.toggle("hide"); // Hide/show menu button
+            backdrop.classList.toggle("active"); // Toggle backdrop
         }
 
         // Function to toggle history window
