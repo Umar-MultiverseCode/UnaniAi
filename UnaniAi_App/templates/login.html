@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Navigation -->
@@ -57,20 +56,12 @@
                     </button>
                 </form>
                 <p>
-                    Don't have an account? <a href="{% url 'signup' %}" id="signup-link">Sign Up</a>
+                    Don't have an account? <a href="{% url 'signup' %}">Sign Up</a>
                 </p>
             </div>
         </div>
     </section>
 
-    <!-- Script for Signup Link -->
-    <script>
-        document.getElementById('signup-link').addEventListener('click', function(event) {
-            event.preventDefault();
-            window.location.href = "{% url 'signup' %}";
-        });
-    </script>
-    <!-- signup.html aur login.html -->
     {% if messages %}
     <div class="messages">
         {% for message in messages %}
@@ -80,5 +71,20 @@
         {% endfor %}
     </div>
     {% endif %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure form inputs adjust properly on mobile
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    // Add a small delay to allow the keyboard to appear
+                    setTimeout(() => {
+                        this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
