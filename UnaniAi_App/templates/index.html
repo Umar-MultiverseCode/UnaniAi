@@ -4,249 +4,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TibAI - Your AI-Powered Tibb Medicine Consultant</title>
+    <title>Tib Ai - Ancient Wisdom Meets Modern Technology</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS is loaded from external file above, no inline styles needed -->
 </head>
 <body>
-    <!-- Nav Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">TibAI</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#features">Features</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#faq">FAQ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login" id="login-btn">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link signup-btn" href="/signup">Sign Up</a>
-                    </li>
-                </ul>
+    <!-- Navigation -->
+    <nav class="glass-nav"> 
+        <div class="logo">
+            <span class="neon-text">Tib</span>AI
         </div>
+        <div class="nav-links">
+            <a href="#" class="active">Home</a>
+            <a href="#">About</a>
+            <a href="#">Consult</a>
+            <a href="#">Remedies</a>
+            <a href="#">Contact</a>
+            <a href="{% url 'signup' %}" class="signup-btn glass">Sign Up</a>
         </div>
+        <button class="menu-toggle">☰</button>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h1>Your AI-Powered Tibb Medicine Consultant</h1>
-                    <p>Discover the wisdom of traditional Tibb medicine with the power of modern AI. Get personalized health advice based on centuries-old healing traditions.</p>
-                    <div class="cta-buttons">
-                        <a href="/signup" class="btn btn-primary">Get Started</a>
-                        <a href="#features" class="btn btn-outline-light">Learn More</a>
+        <div class="particle-container">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
         </div>
-                </div>
-                <div class="col-md-6">
-                    <img src="https://i.imgur.com/wB3MJBD.png" alt="TibAI Illustration" class="img-fluid hero-image">
+        
+        <div class="hero-content">
+            <div class="chatbot-avatar">
+                <div class="avatar-circle">
+                    <div class="avatar-inner"></div>
                 </div>
             </div>
+            <div class="chat-bubble glass">
+                <p>Ask the Wisdom of Ancient Healing</p>
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <input type="text" placeholder="Search Tib remedies..." class="search-bar glass">
+                <div class="search-glow"></div>
+            </div>
+            
+            <a href="{% url 'chat_view' %}">
+                <button class="cta-button pulse">
+                    Start Chatting
+                    <div class="button-glow"></div>
+                </button>
+            </a>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <h2 class="text-center mb-5">Features</h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <h3>AI-Powered Consultations</h3>
-                        <p>Our advanced AI understands Tibb medicine principles and provides personalized health advice.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-book-medical"></i>
-                        </div>
-                        <h3>Traditional Knowledge</h3>
-                        <p>Access centuries of Tibb medicine wisdom curated by experts and delivered by AI.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-hospital"></i>
-                        </div>
-                        <h3>Find Practitioners</h3>
-                        <p>Locate Tibb medicine practitioners and clinics near you with our location-based service.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-heartbeat"></i>
-                        </div>
-                        <h3>Personalized Remedies</h3>
-                        <p>Get tailored health recommendations based on your symptoms and health history.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                        <h3>Interactive Chat</h3>
-                        <p>Have natural conversations with our AI assistant about your health concerns.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-leaf"></i>
-                        </div>
-                        <h3>Herbal Database</h3>
-                        <p>Access a comprehensive database of traditional herbs and their medicinal properties.</p>
-                    </div>
-                </div>
+    <section class="features">
+        <div class="feature-container">
+            <div class="feature-card glass">
+                <div class="feature-icon">🌿</div>
+                <h3>Natural Healing</h3>
+                <p>Discover the power of natural ingredients and ancient healing wisdom.</p>
+                <div class="card-glow"></div>
             </div>
-        </div>
-    </section>
-
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <img src="https://i.imgur.com/FQYSp6v.png" alt="About TibAI" class="img-fluid about-image">
-                </div>
-                <div class="col-md-6">
-                    <h2>About TibAI</h2>
-                    <p>TibAI bridges the gap between ancient healing wisdom and modern technology. Our platform leverages advanced AI to provide personalized Tibb medicine consultations.</p>
-                    <p>Tibb medicine, also known as Unani-Tibb, is a form of traditional medicine practiced in Muslim culture. It has a rich history dating back over 2,000 years, combining the ancient healing wisdom of Greece, Egypt, India, and China.</p>
-                    <p>Our team of Tibb medicine experts and AI specialists have worked together to create a platform that makes this valuable knowledge accessible to everyone.</p>
-                </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🔮</div>
+                <h3>Personalized Care</h3>
+                <p>AI-powered recommendations based on your unique constitution.</p>
+                <div class="card-glow"></div>
             </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section id="faq" class="faq">
-        <div class="container">
-            <h2 class="text-center mb-5">Frequently Asked Questions</h2>
-            <div class="accordion" id="accordionFAQ">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingOne">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            What is Tibb medicine?
-                        </button>
-                    </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFAQ">
-                        <div class="accordion-body">
-                            Tibb medicine, also known as Unani-Tibb, is a traditional system of medicine that originated in Ancient Greece and was developed by Arab and Persian physicians. It is based on the concept of the four humors (blood, phlegm, yellow bile, and black bile) and focuses on maintaining the balance of these humors for optimal health.
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingTwo">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            Is TibAI a replacement for professional medical advice?
-                        </button>
-                    </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionFAQ">
-                        <div class="accordion-body">
-                            No, TibAI is not a replacement for professional medical advice. Our service provides information about traditional Tibb remedies and practices, but you should always consult with qualified healthcare professionals for diagnosis and treatment of medical conditions.
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingThree">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            How accurate is the information provided by TibAI?
-                        </button>
-                    </h2>
-                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionFAQ">
-                        <div class="accordion-body">
-                            TibAI's information is based on traditional Tibb medicine texts and knowledge from experts in the field. Our team continuously reviews and updates the information to ensure accuracy. However, remember that Tibb medicine is a traditional practice and may not always align with modern medical research.
+            <div class="feature-card glass">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Insights</h3>
+                <p>Get immediate access to centuries of Tib medical knowledge.</p>
+                <div class="card-glow"></div>
             </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🎯</div>
+                <h3>Mizaj Analysis</h3>
+                <p>Advanced AI assessment of your temperament and body constitution.</p>
+                <div class="card-glow"></div>
             </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🌡️</div>
+                <h3>Symptom Checker</h3>
+                <p>Intelligent analysis of symptoms based on Tib principles.</p>
+                <div class="card-glow"></div>
             </div>
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingFour">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                            How does TibAI's AI work?
-                        </button>
-                    </h2>
-                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionFAQ">
-                        <div class="accordion-body">
-                            TibAI uses advanced natural language processing to understand your health queries and concerns. Our AI has been trained on a vast database of Tibb medicine knowledge, allowing it to provide relevant information and suggestions based on traditional practices.
+            <div class="feature-card glass">
+                <div class="feature-icon">📚</div>
+                <h3>Knowledge Base</h3>
+                <p>Extensive library of Tib herbs, treatments, and remedies.</p>
+                <div class="card-glow"></div>
             </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🔄</div>
+                <h3>Lifestyle Integration</h3>
+                <p>Personalized recommendations for diet, exercise, and daily routines.</p>
+                <div class="card-glow"></div>
             </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🤝</div>
+                <h3>Expert Connection</h3>
+                <p>Direct access to certified Tib practitioners for consultation.</p>
+                <div class="card-glow"></div>
             </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">📊</div>
+                <h3>Progress Tracking</h3>
+                <p>Monitor your health journey with detailed analytics and insights.</p>
+                <div class="card-glow"></div>
             </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="cta">
-        <div class="container text-center">
-            <h2>Ready to Experience TibAI?</h2>
-            <p>Join thousands of users discovering the benefits of traditional Tibb medicine with our AI assistant.</p>
-            <a href="/signup" class="btn btn-primary">Sign Up Now</a>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h3>TibAI</h3>
-                    <p>Your AI-powered Tibb medicine consultant, making traditional healing wisdom accessible to everyone.</p>
+    <footer class="glass-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <span class="neon-text">Tib</span>AI
                 </div>
-                <div class="col-md-4">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#faq">FAQ</a></li>
-                        <li><a href="/login">Login</a></li>
-                        <li><a href="/signup">Sign Up</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h3>Contact</h3>
-                    <p>Email: info@tibai.com</p>
-                    <p>Phone: +1 (555) 123-4567</p>
-                    <div class="social-icons">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                <p>Ancient wisdom meets modern technology</p>
             </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="#">Home</a>
+                <a href="#">About</a>
+                <a href="#">Consult</a>
+                <a href="#">Privacy Policy</a>
             </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <a href="#">Support</a>
+                <a href="#">Appointments</a>
+                <a href="#">Feedback</a>
             </div>
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <p>&copy; 2023 TibAI. All rights reserved.</p>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#" class="social-link">Twitter</a>
+                    <a href="#" class="social-link">LinkedIn</a>
+                    <a href="#" class="social-link">Instagram</a>
                 </div>
             </div>
         </div>
+        <div class="footer-bottom">
+            <p>© 2024 TibAi. All rights reserved.</p>
+        </div>
     </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Font Awesome -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Script for Mobile Menu -->
+    <script>
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+    </script>
 </body>
 </html>
