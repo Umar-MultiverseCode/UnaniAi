@@ -745,70 +745,120 @@
             }
         }
         
+        /* Mobile optimizations */
         @media (max-width: 768px) {
+            /* Hide avatars on small screens to save space */
+            .message-avatar {
+                display: none !important;
+            }
+            
+            /* Message container adjustment for mobile */
             .message {
-                max-width: 100%;
-                padding: 0 0.75rem;
+                display: block !important; /* Change from flex to block */
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 5px 10px !important;
+                margin: 0 !important;
             }
             
+            /* Give full width to message content */
+            .message-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 10px !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;
+            }
+            
+            /* Special adjustments for AI and user messages */
+            .ai-message .message-content,
+            .user-message .message-content {
+                border-radius: 8px !important;
+            }
+            
+            /* Message group spacing */
             .message-group {
-                padding: 0.75rem 0;
+                padding: 4px 0 !important;
+                margin: 4px 0 !important;
             }
             
+            /* Adjust chat container padding */
+            .chat-messages {
+                padding: 0 !important;
+            }
+            
+            /* Force tables to be fully responsive */
+            .message-content table {
+                width: 100% !important;
+                font-size: 14px !important;
+                margin: 10px 0 !important;
+            }
+            
+            /* Table cell spacing for better mobile viewing */
+            .message-content table th,
+            .message-content table td {
+                padding: 8px 6px !important;
+                word-break: break-word !important;
+            }
+            
+            /* Smaller header text */
+            .message-content h3 {
+                font-size: 18px !important;
+                margin-top: 5px !important;
+                margin-bottom: 8px !important;
+            }
+            
+            /* Adjust input and forms */
             .chat-input-container {
-                padding: 1rem 0.75rem;
+                padding: 10px !important;
             }
             
             .chat-form {
-                max-width: 100%;
+                max-width: 100% !important;
             }
             
             .chat-input {
-                padding: 0.8rem 3rem 0.8rem 1rem;
-                font-size: 0.95rem;
+                padding: 8px 40px 8px 10px !important;
+                font-size: 15px !important;
             }
             
             .send-button {
-                width: 2.2rem;
-                height: 2.2rem;
-            }
-            
-            .send-icon {
-                width: 1rem;
-                height: 1rem;
-            }
-            
-            .model-selector {
-                font-size: 0.9rem;
-                padding: 0.3rem 0.8rem;
+                width: 34px !important;
+                height: 34px !important;
             }
         }
         
+        /* Extreme small devices (phones under 480px) */
         @media (max-width: 480px) {
-            .message-avatar {
-                width: 30px;
-                height: 30px;
-                font-size: 0.8rem;
+            /* Make table text smaller on very small screens */
+            .message-content table {
+                font-size: 12px !important;
+                display: block !important;
+                overflow-x: auto !important;
+                white-space: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: thin !important;
             }
             
-            .message-content {
-                padding: 0.75rem;
-                font-size: 0.95rem;
+            /* Reduce cell padding further */
+            .message-content table th,
+            .message-content table td {
+                padding: 5px 4px !important;
             }
             
-            .chat-input {
-                padding: 0.7rem 2.8rem 0.7rem 0.9rem;
-                font-size: 0.9rem;
+            /* Smaller headers */
+            h3, h4 {
+                font-size: 16px !important;
+                margin-top: 5px !important;
+                margin-bottom: 6px !important;
             }
             
-            .send-button {
-                width: 2rem;
-                height: 2rem;
-                right: 8px;
-            }
-            
-            .input-footer p {
-                font-size: 0.7rem;
+            /* Adjust menu button position for very small screens */
+            .menu-btn {
+                top: 10px !important;
+                left: 10px !important;
+                width: 36px !important;
+                height: 36px !important;
             }
         }
 
