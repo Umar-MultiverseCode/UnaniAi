@@ -719,18 +719,61 @@
 
         /* Chat input container more professional */
         .chat-input-container {
-            padding: 1.5rem 2rem; /* Increased horizontal padding */
-            background: var(--background-dark);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            position: relative;
             width: 100%;
-            position: sticky;
-            bottom: 0;
+            box-sizing: border-box;
         }
 
         .chat-form {
-            max-width: 900px; /* Match the message width */
-            margin: 0 auto;
             position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px 50px 12px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(102, 217, 232, 0.3);
+            background: rgba(15, 23, 42, 0.7);
+            color: #fff;
+            font-size: 16px;
+            resize: none;
+            box-sizing: border-box;
+            min-height: 48px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .send-button {
+            position: absolute;
+            right: 6px;
+            bottom: 6px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: linear-gradient(135deg, #66d9e8 0%, #6096fd 50%, #a78bfa 100%);
+            border: none;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .send-button span {
+            display: none;
+        }
+
+        .send-icon {
+            fill: white;
+            width: 20px;
+            height: 20px;
         }
 
         /* For larger screens */
@@ -745,7 +788,7 @@
             }
         }
         
-        /* Mobile optimizations */
+        /* Mobile optimizations - consolidated for clarity */
         @media (max-width: 768px) {
             /* Hide avatars on small screens to save space */
             .message-avatar {
@@ -754,7 +797,7 @@
             
             /* Message container adjustment for mobile */
             .message {
-                display: block !important; /* Change from flex to block */
+                display: block !important;
                 width: 100% !important;
                 max-width: 100% !important;
                 padding: 5px 10px !important;
@@ -808,28 +851,75 @@
                 margin-bottom: 8px !important;
             }
             
-            /* Adjust input and forms */
+            /* Chat input area optimization */
             .chat-input-container {
-                padding: 10px !important;
+                padding: 10px;
+                position: relative;
             }
             
             .chat-form {
-                max-width: 100% !important;
+                max-width: 100%;
+                width: 100%;
             }
             
             .chat-input {
-                padding: 8px 40px 8px 10px !important;
-                font-size: 15px !important;
+                padding: 10px 45px 10px 12px;
+                font-size: 15px;
+                min-height: 44px;
+                width: 100%;
             }
             
             .send-button {
-                width: 34px !important;
-                height: 34px !important;
+                position: absolute;
+                width: 36px;
+                height: 36px;
+                right: 5px;
+                bottom: 5px;
+                padding: 0;
+                border-radius: 50%;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .send-button span {
+                display: none;
+            }
+            
+            .send-icon {
+                width: 18px;
+                height: 18px;
+                fill: white;
             }
         }
         
-        /* Extreme small devices (phones under 480px) */
+        /* Extra small devices */
         @media (max-width: 480px) {
+            /* Chat input area optimization */
+            .chat-input-container {
+                padding: 8px;
+            }
+            
+            .chat-input {
+                padding: 8px 40px 8px 10px;
+                font-size: 14px;
+                min-height: 40px;
+                border-radius: 18px;
+            }
+            
+            .send-button {
+                width: 32px;
+                height: 32px;
+                right: 4px;
+                bottom: 4px;
+            }
+            
+            .send-icon {
+                width: 16px;
+                height: 16px;
+            }
+            
             /* Make table text smaller on very small screens */
             .message-content table {
                 font-size: 12px !important;
@@ -837,7 +927,6 @@
                 overflow-x: auto !important;
                 white-space: nowrap !important;
                 -webkit-overflow-scrolling: touch !important;
-                scrollbar-width: thin !important;
             }
             
             /* Reduce cell padding further */
@@ -859,6 +948,12 @@
                 left: 10px !important;
                 width: 36px !important;
                 height: 36px !important;
+            }
+            
+            /* Footer text */
+            .input-footer p {
+                font-size: 11px;
+                margin-top: 4px;
             }
         }
 
@@ -994,6 +1089,89 @@
             position: relative;
             margin-left: 0; /* Remove any left margin */
         }
+
+        /* Send button specific fixes at global level */
+        .send-button {
+            cursor: pointer;
+            background: linear-gradient(135deg, #66d9e8 0%, #6096fd 50%, #a78bfa 100%);
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            right: 12px;
+            bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover,
+        .send-button:focus {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .send-icon {
+            fill: white;
+        }
+
+        /* Chat form layout improvement */
+        .chat-form {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .chat-input {
+            box-sizing: border-box;
+            width: 100%;
+            resize: none;
+        }
+
+        /* Mobile specific fixes for send button */
+        @media (max-width: 768px) {
+            /* Send button fixes */
+            .send-button {
+                width: 40px !important;
+                height: 40px !important;
+                right: 10px !important;
+                bottom: 10px !important;
+                z-index: 100 !important;
+                padding: 0 !important;
+            }
+            
+            .send-button span {
+                display: none !important; /* Hide text on small devices */
+            }
+            
+            .send-icon {
+                width: 20px !important;
+                height: 20px !important;
+            }
+            
+            /* Chat input fixes */
+            .chat-input {
+                padding-right: 50px !important; /* Make space for the button */
+                min-height: 46px !important;
+            }
+        }
+
+        /* Very small devices */
+        @media (max-width: 480px) {
+            .send-button {
+                width: 36px !important;
+                height: 36px !important;
+                right: 8px !important;
+                bottom: 8px !important;
+            }
+            
+            .send-icon {
+                width: 18px !important;
+                height: 18px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1039,11 +1217,10 @@
                     {% csrf_token %}
                     <textarea class="chat-input" placeholder="Message TibAI..." rows="1"></textarea>
                     <button type="submit" class="send-button">
-                        <svg class="send-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="send-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
                         </svg>
                         <span>Send</span>
-                        <div class="button-glow"></div>
                     </button>
                 </form>
                 <div class="input-footer">
