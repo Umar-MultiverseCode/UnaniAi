@@ -118,14 +118,47 @@ def get_unani_ingredients(disease):
             seen.add(key)
             unique_ingredients.append(ingredient)
     
-    # If we have fewer than 3 ingredients, call Gemini to generate more
-    if len(unique_ingredients) < 3:
+    # Determine severity level and appropriate ingredient count
+    ingredient_count = determine_severity_and_count(disease)
+    
+    # If we have fewer than required ingredients, call Gemini to generate more
+    if len(unique_ingredients) < ingredient_count:
         # Generate additional ingredients using Gemini API
-        additional_ingredients = generate_additional_ingredients(disease, 3 - len(unique_ingredients))
+        additional_ingredients = generate_additional_ingredients(disease, ingredient_count - len(unique_ingredients))
         for ing in additional_ingredients:
             unique_ingredients.append(ing)
     
-    return unique_ingredients
+    return unique_ingredients[:ingredient_count]  # Limit to the appropriate count
+
+def determine_severity_and_count(condition):
+    """Determine the severity of a condition and the appropriate number of remedies"""
+    # Map condition keywords to severity levels
+    severity_mapping = {
+        # Mild conditions - 3 remedies
+        "cold": 3, "cough": 3, "headache": 3, "indigestion": 3, "acidity": 3,
+        "gas": 3, "constipation": 3, "diarrhea": 3, "minor": 3, "mild": 3,
+        
+        # Moderate conditions - 4 remedies
+        "fever": 4, "flu": 4, "infection": 4, "asthma": 4, "bronchitis": 4,
+        "allergy": 4, "arthritis": 4, "pain": 4, "moderate": 4, "joint pain": 4,
+        
+        # Severe conditions - 5 remedies
+        "pneumonia": 5, "tuberculosis": 5, "cancer": 5, "diabetes": 5, "heart": 5,
+        "liver": 5, "kidney": 5, "chronic": 5, "severe": 5, "serious": 5,
+        
+        # Very severe conditions - 6 remedies
+        "terminal": 6, "critical": 6, "emergency": 6, "life-threatening": 6
+    }
+    
+    # Check if condition contains any keywords
+    condition_terms = condition.lower().split()
+    max_count = 3  # Default to mild (3 remedies)
+    
+    for term in condition_terms:
+        if term in severity_mapping and severity_mapping[term] > max_count:
+            max_count = severity_mapping[term]
+    
+    return max_count
 
 def generate_additional_ingredients(condition, count):
     """Generate additional ingredients for a condition when database has insufficient entries"""
@@ -294,14 +327,6 @@ def generate_chat_response(user_message):
     # 5. Check Tib Ingredients Table (if populated)
     ingredients = get_unani_ingredients(condition)
     if ingredients:
-        # Ensure we have at least 3 ingredients
-        if len(ingredients) < 3:
-            # This should never happen now with our get_unani_ingredients function update
-            # but keeping as a fallback
-            additional_count = 3 - len(ingredients)
-            additional_ingredients = generate_additional_ingredients(condition, additional_count)
-            ingredients.extend(additional_ingredients)
-            
         # Add a brief description about the condition before the table
         description = get_condition_description(condition)
         
@@ -323,23 +348,8 @@ def generate_chat_response(user_message):
                 f"<p style='color: white; font-style: italic;'>Indeed, the cure is Allah's will.</p>")
 
     # 6. Fallback to Gemini API with Dynamic Remedy Count
-    # Define disease severity levels (example)
-    severity_levels = {
-        "cold": "mild", "cough": "mild", "fever": "moderate", "flu": "moderate",
-        "pneumonia": "severe", "tuberculosis": "severe", "cancer": "severe"
-    }
-    
-    # Determine severity and remedy count
-    remedy_count = 3  # Default minimum for mild or unknown
-    for word in words:
-        if word in severity_levels:
-            if severity_levels[word] == "mild":
-                remedy_count = 3
-            elif severity_levels[word] == "moderate":
-                remedy_count = 4
-            elif severity_levels[word] == "severe":
-                remedy_count = 5
-            break
+    # Determine severity and remedy count using our new function
+    remedy_count = determine_severity_and_count(condition)
 
     prompt = f"""
     You are an expert in Tib medicine (Unani medicine). Provide a response about '{condition}' in this exact format:
