@@ -258,8 +258,75 @@ def generate_chat_response(user_message):
     # Extract actual condition/topic from the message
     condition = extract_condition(user_message)
     
+    # List of valid health conditions in Unani/Tibb medicine (expanded to include more conditions)
+    valid_health_conditions = [
+        # Common conditions
+        "fever", "cough", "cold", "headache", "migraine", "sore throat", 
+        "stomach pain", "gas", "acidity", "heartburn", "constipation", "diarrhea", 
+        "nausea", "vomiting", "insomnia", "anxiety", "depression", "stress",
+        "joint pain", "arthritis", "backache", "skin rash", "eczema", "psoriasis",
+        "hair loss", "dandruff", "eye infection", "fatigue", "weakness", "anemia",
+        "hypertension", "asthma", "diabetes", "obesity", "ulcer", "kidney stone",
+        "piles", "jaundice", "alzheimer", "pneumonia", "tuberculosis", "malaria",
+        "dengue", "allergy", "influenza", "indigestion", "bloating", "bronchitis",
+        "sinusitis", "tonsillitis", "thyroid", "gastritis", "menstrual pain",
+        "erectile dysfunction", "high cholesterol", "low blood pressure", "gout",
+        "sciatica", "cystitis", "urinary tract infection", "prostate", "vertigo",
+        
+        # Weight issues
+        "underweight", "weight loss", "malnutrition", "thin", "skinny", "lean", 
+        "overweight", "weight gain", "obesity", "fat",
+        
+        # Dental conditions
+        "pyria", "pyorrhea", "gingivitis", "periodontitis", "gum disease", "gum bleeding",
+        "tooth decay", "dental caries", "tooth pain", "toothache", "oral ulcer",
+        
+        # Cancer types
+        "cancer", "carcinoma", "tumor", "leukemia", "lymphoma", "sarcoma",
+        "breast cancer", "lung cancer", "lungs cancer", "stomach cancer", "liver cancer",
+        "colon cancer", "prostate cancer", "skin cancer", "cervical cancer",
+        
+        # Other common health issues
+        "acne", "pimples", "boil", "abscess", "wound", "burn", "sprain", "fracture",
+        "dislocation", "paralysis", "stroke", "epilepsy", "seizure", "parkinson",
+        "dementia", "memory loss", "forgetfulness", "hearing loss", "deafness",
+        "vision loss", "blindness", "cataracts", "glaucoma", "digestive problem",
+        "food poisoning", "addiction", "alcoholism"
+    ]
+    
+    # Common medical terms that might indicate a valid condition
+    medical_terms = [
+        "pain", "ache", "inflammation", "swelling", "infection", "disorder", 
+        "disease", "syndrome", "condition", "ailment", "illness", "virus", 
+        "bacterial", "chronic", "acute", "symptoms", "treatment", "remedy", 
+        "cancer", "tumor", "cyst", "lesion", "wound", "injury", "fracture", 
+        "sprain", "strain", "rupture", "bleeding", "discharge", "itis",
+        "deficiency", "excess", "imbalance", "dysfunction", "weak", "weak",
+        "problem", "issue", "sick", "unwell", "health", "healthy"
+    ]
+    
+    # Common non-medical terms that might indicate a person or non-medical query
+    non_medical_indicators = [
+        "name", "person", "place", "country", "city", "food", "movie", "song", 
+        "game", "sport", "weather", "price", "cost", "buy", "sell", "purchase",
+        "download", "website", "how to make", "recipe", "cook", "bake", "address",
+        "location", "directions", "age", "birthday", "email", "phone", "number",
+        "contact", "friend", "family", "brother", "sister", "father", "mother"
+    ]
+    
+    # Check if the condition is a valid health condition or contains medical terminology
+    is_known_condition = any(health_condition in condition for health_condition in valid_health_conditions)
+    has_medical_term = any(term in condition for term in medical_terms)
+    is_likely_non_medical = any(indicator in condition for indicator in non_medical_indicators) or len(condition.split()) > 6
+    
+    # Special handling for common health concerns - added check for single-word health issues
+    is_direct_health_concern = condition in ["underweight", "overweight", "obese", "thin", "fatigue"] or "weight" in condition
+    
+    # Determine if this is likely a valid medical query
+    is_valid_condition = is_known_condition or has_medical_term or is_direct_health_concern and not is_likely_non_medical
+    
     # Generate a unique header for this condition
-    response_header = generate_dynamic_header(condition)
+    response_header = generate_dynamic_header(condition) if is_valid_condition else "Health Information"
     
     # 1. Handle Pure Greetings
     greetings = ["hello", "hi", "sala", "assalam"]
@@ -289,6 +356,10 @@ def generate_chat_response(user_message):
                 f"<tr style='border: 1px solid #ddd; background-color: white;'><td style='padding: 8px;'>Kushta Marwareed</td><td style='padding: 8px;'>General weakness, calcium deficiency</td><td style='padding: 8px;'>Calcined powder</td><td style='padding: 8px;'>Strengthening, immune-boosting</td></tr>"
                 f"</tbody></table>"
                 f"<p style='color: white; font-style: italic;'>These medicines should be taken under the guidance of a qualified Unani practitioner. Indeed, the cure is Allah's will.</p>")
+
+    # Check if the input is not a valid health condition
+    if not is_valid_condition:
+        return "<p style='color: white;'>I'm trained to provide information about health conditions and traditional Unani remedies. It seems you've entered something that may not be a health condition. Please ask about specific health issues or symptoms for which you'd like Unani medicine information.</p>"
 
     # 4. Check Known Diseases in unani_medicines
     words = user_message.split()
@@ -478,23 +549,31 @@ def generate_dynamic_header(condition):
     seed = int(time.time()) % 100
     random.seed(seed)
     
-    # Create a list of template headers
+    # Properly capitalize the condition (handle multi-word conditions)
+    capitalized_condition = ' '.join(word.capitalize() for word in condition.split())
+    
+    # Create a list of template headers with more variety
     templates = [
-        f"Tib Remedies for {condition.capitalize()}",
-        f"Natural Treatment: {condition.capitalize()}",
-        f"Tibb-e-Nabawi: Healing {condition.capitalize()}",
-        f"Traditional Cures for {condition.capitalize()}",
-        f"Healing {condition.capitalize()} with Tib Medicine",
-        f"Ancient Wisdom for {condition.capitalize()}",
-        f"Prophetic Medicine for {condition.capitalize()}",
-        f"{condition.capitalize()}: Tib Solutions",
-        f"Treating {condition.capitalize()} Naturally",
-        f"Holistic Approach to {condition.capitalize()}",
-        f"{condition.capitalize()}: Balancing the Humors",
-        f"Tib Perspective on {condition.capitalize()}",
-        f"Addressing {condition.capitalize()} with Tibb",
-        f"{condition.capitalize()}: Nature's Pharmacy",
-        f"Time-Tested Remedies for {condition.capitalize()}"
+        f"Tib Remedies for {capitalized_condition}",
+        f"Natural Treatment: {capitalized_condition}",
+        f"Tibb-e-Nabawi: Healing {capitalized_condition}",
+        f"Traditional Cures for {capitalized_condition}",
+        f"Healing {capitalized_condition} with Tib Medicine",
+        f"Ancient Wisdom for {capitalized_condition}",
+        f"Prophetic Medicine for {capitalized_condition}",
+        f"{capitalized_condition}: Tib Solutions",
+        f"Treating {capitalized_condition} Naturally",
+        f"Holistic Approach to {capitalized_condition}",
+        f"{capitalized_condition}: Balancing the Humors",
+        f"Tib Perspective on {capitalized_condition}",
+        f"Addressing {capitalized_condition} with Tibb",
+        f"{capitalized_condition}: Nature's Pharmacy",
+        f"Time-Tested Remedies for {capitalized_condition}",
+        f"Unani Treatment for {capitalized_condition}",
+        f"{capitalized_condition}: The Unani Approach",
+        f"Traditional Healing for {capitalized_condition}",
+        f"Herbal Remedies for {capitalized_condition}",
+        f"Managing {capitalized_condition} with Tib Medicine"
     ]
     
     # Choose a random template
