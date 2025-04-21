@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TibAI Chat Interface</title>
+    <title>TibbAI Chat Interface</title>
     <link rel="stylesheet" href="{% static 'css/chat.css' %}">
     {% comment %} <link rel="stylesheet" href="{% static 'css/history.css' %}">
     <link rel="stylesheet" href="{% static 'css/logout.css' %}"> {% endcomment %}
@@ -1186,7 +1186,7 @@
                     <div class="btn-glow"></div>
                 </button>
                 <div class="model-selector">
-                    <span class="model-name">TibAI Assistant</span>
+                    <span class="model-name">TibbAI Assistant</span>
                     <span class="model-version">3.5</span>
                 </div>
             </div>
@@ -1202,9 +1202,9 @@
                         </div>
                         <div class="message-content glass">
                             <div class="message-header">
-                                <span class="sender">TibAI</span>
+                                <span class="sender">TibbAI</span>
                             </div>
-                            <p>Welcome to TibAI! I'm your personal Tib medicine assistant. How can I help you today with natural healing solutions?</p>
+                            <p>Welcome to TibbAI! I'm your personal Tibb medicine assistant. How can I help you today with natural healing solutions?</p>
                         </div>
                     </div>
                 </div>
@@ -1215,7 +1215,7 @@
             <div class="chat-input-container glass">
                 <form class="chat-form" action="{% url 'chat_view' %}" method="POST">
                     {% csrf_token %}
-                    <textarea class="chat-input" placeholder="Message TibAI..." rows="1"></textarea>
+                    <textarea class="chat-input" placeholder="Message TibbAI..." rows="1"></textarea>
                     <button type="submit" class="send-button">
                         <svg class="send-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
@@ -1224,7 +1224,7 @@
                     </button>
                 </form>
                 <div class="input-footer">
-                    <p>TibAI can make mistakes. Consider checking important information.</p>
+                    <p>TibbAI can make mistakes. Consider checking important information.</p>
                 </div>
             </div>
         </main>
@@ -1235,7 +1235,7 @@
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>TibAI Menu</h2>
+                <h2>TibbAI Menu</h2>
             </div>
             <div class="sidebar-content">
                 <button class="history-btn" onclick="toggleHistory()">
@@ -1304,7 +1304,7 @@
                                 </div>
                                 <div class="message-content glass">
                                     <div class="message-header">
-                                        <span class="sender">TibAI</span>
+                                        <span class="sender">TibbAI</span>
                                     </div>
                                     <p>{{ response|safe }}</p>
                                 </div>
@@ -1456,7 +1456,7 @@
             .then(data => {
                 // Handle the response (add AI's message to the chat)
                 if (data.response) {
-                    addMessageToChat("TibAI", data.response);
+                    addMessageToChat("TibbAI", data.response);
                     // Apply fix after rendering
                     setTimeout(fixTableStyles, 100);
                 } else if (data.error) {
@@ -1469,7 +1469,7 @@
         // Function to add message to chat window
         function addMessageToChat(sender, message) {
             const chatMessages = document.querySelector(".chat-messages");
-            const isAI = sender === "TibAI";
+            const isAI = sender === "TibbAI";
             
             // Create group container (alternating backgrounds like ChatGPT)
             const messageGroup = document.createElement("div");
@@ -1674,7 +1674,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.facilities) {
-                                let output = "<h2>Nearest Tib Clinics/Hospitals:</h2>";
+                                let output = "<h2>Nearest Tibb Clinics/Hospitals:</h2>";
                                 data.facilities.forEach(facility => {
                                     output += `
                                         <div class="facility">
